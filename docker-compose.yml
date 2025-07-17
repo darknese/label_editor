@@ -1,0 +1,26 @@
+x-postgres-variables: &postgres-variables
+  POSTGRES_DB: 'label-editor'
+  POSTGRES_USER: 'label-editor'
+  POSTGRES_PASSWORD: '12345678'
+
+services:
+  postgres:
+    container_name: postgres-label-editor
+    image: postgres:latest
+    restart: always
+    environment:
+      <<: *postgres-variables
+    ports:
+      - "5432:5432"
+    networks:
+      - default
+    healthcheck:
+      interval: 10s
+      retries: 10
+      test: 'pg_isready -U label-editor -d label-editor'
+      timeout: 2s
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:

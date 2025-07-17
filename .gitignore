@@ -1,0 +1,23 @@
+# .gitignore
+
+# Node
+node_modules/
+dist/
+.env
+
+# VSCode
+.vscode/
+
+# OS
+.DS_Store
+
+# Logs
+logs/
+*.log
+
+# Prisma
+prisma/migrations/
+
+# Docker
+*.local
+docker-data/
