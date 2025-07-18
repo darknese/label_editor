@@ -10,5 +10,11 @@ export class UsersService {
     return this.prisma.user.findMany(); 
   }
 
+  findOne(email: string) {
+    return this.prisma.user.findUnique({
+      where: { email }
+    })
+  }
+
 }
  
