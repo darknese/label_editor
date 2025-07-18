@@ -15,28 +15,117 @@ datasource db {
 
 model User {
   id        String     @id @default(uuid())
-  email     String     @unique
+  /// Email пользователя
+  /// @FieldType('Scalars.GraphQLEmailAddress')
+  email     String     @unique @db.VarChar(50)
   password  String
+  /// Фамилия
+  /// @Validator.MinLength(3)
+  /// @Validator.MaxLength(50)
+  lastName  String  @map("last_name") @db.VarChar(50)
+  /// Имя
+  /// @Validator.MinLength(3)
+  /// @Validator.MaxLength(50)
+  firstName String  @map("first_name") @db.VarChar(50)
+  /// Отчество
+  /// @Validator.MaxLength(50)
+  sirName   String? @map("sir_name") @db.VarChar(50)
+  /// Флаг активности пользователя
+  active    Boolean @default(true)
+  /// Номер телефона
+  /// @Validator.MinLength(3)
+  /// @Validator.MaxLength(20)
+  phone    String?   @db.VarChar(50)
+  /// Роль пользователя
+  role     Role      @default(USER)
+  /// Пол пользователя
+  gender   Gender    @default(UNKNOWN)
+
+  /// Дата создания
+  createdAt DateTime @default(now()) @map("created_at")
+  /// Дата обновления
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
+  /// Мои файлы
+  files        File[]
+
   templates Template[]
-  createdAt DateTime   @default(now())
+  
+
+  @@map("users")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum Gender {
+  UNKNOWN
+  MALE
+  FEMALE
+}
+
+model File {
+  /// Идентификатор файла
+  id        String    @id @default(uuid())
+  /// Название файла
+  /// @Validator.MinLength(3)
+  name      String @db.VarChar(512)
+  type      FileType  @default(OTHER)
+  /// Название сервиса, на котором расположен файл
+  /// @FieldType('Scalars.GraphQLURL')
+  serverUrl String @map("server_url") @db.VarChar(64)
+  /// Название баскета для хранения файла
+  /// @Validator.MinLength(3)
+  bucket    String @db.VarChar(64)
+  /// Название файла в баскете
+  /// @Validator.MinLength(3)
+  key       String @db.VarChar(512)
+  
+
+  /// Дата создания
+  createdAt DateTime @default(now()) @map("created_at")
+  /// Дата обновления
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+  /// Файл пользователя, если null - файл системный
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  userId    String?     @map("user_id")
+
+  template  Template? @relation(fields: [templateId], references: [id])
+  templateId String?  @map("template_id")
+
+  @@map("files")
+}
+
+enum FileType {
+  IMAGE
+  DOCUMENT
+  VIDEO
+  OTHER
 }
 
 model Template {
+  /// Идентификатор шаблона
   id        String       @id @default(uuid())
-  name      String
+  /// Название шаблона
+  name      String       @db.VarChar(255)
+  /// Данные шаблона в JSON формате
   data      Json
-  preview   String?
+  /// Превью шаблона (опционально)
+  preview   String?      @db.VarChar(512)
+  /// Владелец шаблона (пользователь)
   userId    String
   user      User         @relation(fields: [userId], references: [id])
-  createdAt DateTime     @default(now())
-  image     ImageAsset[]
+  /// Дата создания
+  createdAt DateTime     @default(now()) @map("created_at")
+  /// Дата обновления
+  updatedAt DateTime     @default(now()) @updatedAt @map("updated_at")
+
+  /// Связанные изображения шаблона
+  files    File[]
+
+  @@map("templates")
 }
 
-model ImageAsset {
-  id         String    @id @default(uuid())
-  fileName   String
-  url        String
-  templateId String?
-  template   Template? @relation(fields: [templateId], references: [id])
-  uploadedAt DateTime  @default(now())
-}
+
