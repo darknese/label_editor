@@ -1,16 +1,18 @@
-// src/auth/auth.service.ts
+
 import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
 import * as bcrypt from 'bcrypt'
 import { RegisterUserDto } from './dto/user-register.dto'
 import { LoginUserDto } from './dto/user-login.dto'
 import { PrismaService } from '@common/services/prisma.service'
+import { ConfigService } from '@nestjs/config'
 
 @Injectable()
 export class AuthService {
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
+    private configService: ConfigService
   ) {}
 
   async register(dto: RegisterUserDto) {
@@ -48,14 +50,15 @@ export class AuthService {
     if (!passwordMatches) {
       throw new UnauthorizedException('Неверный email или пароль')
     }
-
     return this.generateToken(user)
   }
 
   private generateToken(user: any) {
     const payload = { sub: user.id, email: user.email, role: user.role }
     return {
-      access_token: this.jwtService.sign(payload),
+    access_token: this.jwtService.sign(payload, {
+      secret: this.configService.get('SECRET_KEY', 'default_secret'),
+  }),
       user: {
         id: user.id,
         email: user.email,

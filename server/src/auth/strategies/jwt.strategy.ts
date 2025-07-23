@@ -12,16 +12,15 @@ export interface JwtPayload {
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-  constructor(private readonly usersService: UsersService, private readonly config: ConfigService) {
-    const secretKey = config.get<string>('SECRET_KEY');
-    if (!secretKey) {
-    throw new Error('SECRET_KEY is not set in the environment variables');
-    }
+  constructor(
+    private readonly usersService: UsersService,
+    configService: ConfigService
+  ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: secretKey
-    })
+      secretOrKey: configService.get<string>('SECRET_KEY', 'default_secret'),
+    });
   }
 
   async validate({ email }: any): Promise<User> {
