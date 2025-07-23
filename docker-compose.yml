@@ -10,11 +10,11 @@ x-minio-variables: &minio-variables
   MINIO_END_POINT: "${MINIO_END_POINT}"
   MINIO_PORT: "${MINIO_PORT}"
   MINIO_BUCKET: "${MINIO_BUCKET}"
-
+ 
 services:
   postgres:
     container_name: postgres-dev-label-editor
-    image: postgres:15.2
+    image: postgres:latest
     restart: always
     environment:
       <<: *postgres-variables
