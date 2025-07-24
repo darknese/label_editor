@@ -23,5 +23,5 @@ prisma/migrations/
 docker-data/
 
 # Build artifacts
-infrastructure/s3/data/
+infrastructure/s3/data/**
 infrastructure/postgres/data/

@@ -6,35 +6,35 @@ import { ApiBearerAuth, ApiBody, ApiConsumes } from '@nestjs/swagger';
 
 @Controller('templates')
 export class TemplatesController {
-  constructor(private readonly templatesService: TemplatesService) {}
+  constructor(private readonly templatesService: TemplatesService) { }
 
   @Post()
   create(@Body() dto) {
     return this.templatesService.createTemplate(dto)
   }
   @Post('upload')
-    @UseInterceptors(FileInterceptor('file'))
-    @UseGuards(AuthGuard('jwt')) // если используешь JWT
-    @ApiBearerAuth()
-    @ApiConsumes('multipart/form-data')
-@ApiBody({
-  schema: {
-    type: 'object',
-    properties: {
-      file: {
-        type: 'string',
-        format: 'binary',
+  @UseInterceptors(FileInterceptor('file'))
+  @UseGuards(AuthGuard('jwt')) // если используешь JWT
+  @ApiBearerAuth()
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+        },
       },
     },
-  },
-})
-async uploadTemplate(
-  @UploadedFile() file: Express.Multer.File,
-  @Req() req: any,
-) {
-  const userId = req.user.id; // если используешь `passport-jwt`
-  return this.templatesService.upload(file, userId);
-}
+  })
+  async uploadTemplate(
+    @UploadedFile() file: Express.Multer.File,
+    @Req() req: any,
+  ) {
+    const userId = req.user.id;
+    return this.templatesService.upload(file, userId);
+  }
 
   @Get(':id')
   get(@Param('id') id: string) {
