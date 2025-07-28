@@ -11,6 +11,9 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onRegister, onSwitch
     const [password, setPassword] = useState('');
     const [firstName, setFirstName] = useState('');
     const [lastName, setLastName] = useState('');
+    const [sirName, setSirName] = useState('');
+    const [phone, setPhone] = useState('');
+    const [gender, setGender] = useState<'UNKNOWN' | 'MALE' | 'FEMALE'>('UNKNOWN');
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
 
@@ -22,7 +25,15 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onRegister, onSwitch
             const res = await fetch('/auth/register', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password, firstName, lastName }),
+                body: JSON.stringify({
+                    email,
+                    password,
+                    firstName,
+                    lastName,
+                    sirName: sirName || undefined,
+                    phone: phone || undefined,
+                    gender
+                }),
             });
             if (!res.ok) {
                 let msg = 'Registration failed';
@@ -69,6 +80,27 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onRegister, onSwitch
                         onChange={e => setLastName(e.target.value)}
                         required
                     />
+                    <TextField
+                        label="Отчество"
+                        value={sirName}
+                        onChange={e => setSirName(e.target.value)}
+                    />
+                    <TextField
+                        label="Телефон"
+                        value={phone}
+                        onChange={e => setPhone(e.target.value)}
+                    />
+                    <TextField
+                        label="Пол"
+                        select
+                        value={gender}
+                        onChange={e => setGender(e.target.value as 'UNKNOWN' | 'MALE' | 'FEMALE')}
+                        SelectProps={{ native: true }}
+                    >
+                        <option value="UNKNOWN">Не указан</option>
+                        <option value="MALE">Мужской</option>
+                        <option value="FEMALE">Женский</option>
+                    </TextField>
                     <TextField
                         label="Пароль"
                         type="password"
