@@ -1,11 +1,13 @@
-import { Box, Typography } from "@mui/material";
+import { Box, Button, Stack, Typography } from "@mui/material";
 import ShapeToolPanel from "./ShapeToolPanel";
 import TextToolPanel from "./TextToolPanel";
 import ImageToolPanel from "./ImageToolPanel";
 import { useTool } from "../../state/useTool";
+import { useEditor } from "../../state/useEditor";
 
 const ToolPanel = () => {
     const { activeTool } = useTool();
+    const { clearStore } = useEditor();
 
     return (
         <Box p={2}>
@@ -16,7 +18,15 @@ const ToolPanel = () => {
             {activeTool === "shape" && <ShapeToolPanel />}
             {activeTool === "text" && <TextToolPanel />}
             {activeTool === "image" && <ImageToolPanel />}
-        </Box>
+            {activeTool === "clear" && (
+                <Stack spacing={1}>
+                    <Button size="small" variant="contained" onClick={clearStore}>
+                        Очистить холст
+                    </Button>
+                </Stack>
+            )
+            }
+        </Box >
     );
 };
 

@@ -20,4 +20,4 @@ export type Element = {
   };
 };
 
-export type ToolType = "text" | "image" | "shape" | null;
+export type ToolType = "text" | "image" | "shape" | "clear" | null;

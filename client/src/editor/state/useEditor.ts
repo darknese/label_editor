@@ -23,6 +23,7 @@ interface EditorState {
     alignTop?: () => void;
     alignBottom?: () => void;
     alignMiddle?: () => void;
+    clearStore: () => void;
 }
 export const useEditor = create<EditorState>()(
 
@@ -146,6 +147,12 @@ export const useEditor = create<EditorState>()(
                     selectedId: newElement.id,
                 }));
             },
+            clearStore: () =>
+                set({
+                    elements: [],
+                    CANVAS_SIZE: { width: 1000, height: 1000 },
+                    selectedId: null,
+                }),
         }),
         {
             name: "label-editor"

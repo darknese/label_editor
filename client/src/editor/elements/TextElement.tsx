@@ -1,90 +1,188 @@
-import { useRef, useEffect, useState, useCallback } from 'react';
+// src/components/CanvasArea/TextElement.tsx
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { Text, Transformer } from 'react-konva';
 import Konva from 'konva';
-import { useEditor } from '../state/useEditor';
+import { TextEditor } from './TextEditor';
 
-interface TextElementProps {
+interface Props {
     id: string;
     x: number;
     y: number;
-    text: string;
+    width?: number;
+    height?: number;
+    rotation?: number;
+    fontSize?: number;
+    fontFamily?: string;
+    fill?: string;
+    text?: string;
+    onChange: (newProps: Partial<EditorConfig>) => void;
+    onSelect: () => void;
+    isSelected: boolean;
+}
+export interface EditorConfig {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
     fontSize: number;
     fontFamily: string;
     fill: string;
+    text: string;
+    align: string;
+    rotation: number;
+    padding: number;
 }
 
 export const TextElement = ({
     id,
     x,
     y,
-    text,
-    fontSize,
-    fontFamily,
-    fill,
-}: TextElementProps) => {
+    width = 200,
+    height,
+    rotation = 0,
+    fontSize = 20,
+    fontFamily = 'Arial',
+    fill = '#000',
+    text = 'text',
+    onChange,
+    onSelect,
+    isSelected,
+}: Props) => {
     const textRef = useRef<Konva.Text>(null);
     const trRef = useRef<Konva.Transformer>(null);
     const [isEditing, setIsEditing] = useState(false);
-    const { selectedId, setSelectedId, updateElement } = useEditor();
+    const [textWidth, setTextWidth] = useState(width);
 
-    const handleDblClick = () => {
-        setIsEditing(true);
-    };
+    const [editorConfig, setEditorConfig] = useState<EditorConfig | null>(null);
 
-    const handleTextChange = (newText: string) => {
-        updateElement(id, { text: newText });
-    };
-
-    const handleClose = () => {
-        setIsEditing(false);
-    };
-
+    // Привязка трансформера к тексту
     useEffect(() => {
-        if (trRef.current && textRef.current && selectedId === id) {
+        if (isSelected && trRef.current && textRef.current) {
             trRef.current.nodes([textRef.current]);
+            trRef.current.getLayer()?.batchDraw();
         }
-    }, [selectedId]);
+    }, [isSelected]);
+
+    // Установка курсора при редактировании
+    useEffect(() => {
+        if (isEditing) {
+            setTimeout(() => {
+                const stage = textRef.current?.getStage();
+                stage?.container().style.setProperty('cursor', 'text');
+            });
+        } else {
+            const stage = textRef.current?.getStage();
+            stage?.container().style.setProperty('cursor', 'default');
+        }
+    }, [isEditing]);
+
+    // Обработка двойного клика
+    const handleDoubleClick = useCallback(() => {
+        const node = textRef.current;
+        if (node) {
+            // 1. Считываем все данные ДО того, как скрыть текст
+            const config: EditorConfig = {
+                x: node.getAbsolutePosition().x,
+                y: node.getAbsolutePosition().y,
+                width: node.width(),
+                height: node.height(),
+                fontSize: node.fontSize(),
+                fontFamily: node.fontFamily(),
+                fill: node.fill() as string,
+                text: node.text(),
+                align: node.align(),
+                rotation: node.rotation(),
+                padding: node.padding(),
+            };
+            // 2. Сохраняем конфиг в стейт
+            setEditorConfig(config);
+            // 3. Включаем режим редактирования
+            setIsEditing(true);
+        }
+    }, []);
+
+    // Обработка трансформации
+    const handleTransform = useCallback(() => {
+        const node = textRef.current;
+        if (!node) return;
+        const scaleX = node.scaleX();
+        const newWidth = Math.max(30, node.width() * scaleX);
+        setTextWidth(newWidth);
+        node.setAttrs({ width: newWidth, scaleX: 1 });
+    }, []);
+
+    // Завершение редактирования и обновление текста
+    const handleTextChange = useCallback((newText: string) => {
+        onChange({ text: newText });
+    }, [onChange]);
+
 
     return (
         <>
-            {!isEditing && (
-                <>
-                    <Text
-                        ref={textRef}
-                        x={x}
-                        y={y}
-                        text={text}
-                        fontSize={fontSize}
-                        fontFamily={fontFamily}
-                        fill={fill}
-                        draggable
-                        onClick={() => setSelectedId(id)}
-                        onDblClick={handleDblClick}
-                        onTransformEnd={(e) => {
-                            const node = textRef.current;
-                            if (!node) return;
-                            updateElement(id, {
-                                width: node.width() * node.scaleX(),
-                            });
-                            node.scaleX(1);
-                        }}
-                    />
-                    {selectedId === id && (
-                        <Transformer
-                            ref={trRef}
-                            boundBoxFunc={(oldBox, newBox) => ({
-                                ...newBox,
-                                width: Math.max(30, newBox.width),
-                            })}
-                        />
-                    )}
-                </>
+            <Text
+                ref={textRef}
+                text={text}
+                x={x}
+                y={y}
+                width={textWidth}
+                height={height}
+                fontSize={fontSize}
+                fontFamily={fontFamily}
+                fill={fill}
+                rotation={rotation}
+                opacity={isEditing ? 0 : 1}
+                draggable
+                onClick={() => {
+                    onSelect();
+                }}
+                onDblClick={handleDoubleClick}
+                onDblTap={handleDoubleClick}
+                onTransform={handleTransform}
+                onTransformEnd={(e: any) => {
+                    const node = e.target;
+                    const scaleX = node.scaleX();
+                    const scaleY = node.scaleY();
+
+                    node.scaleX(1);
+                    node.scaleY(1);
+                    const newProps = {
+                        x: node.x(),
+                        y: node.y(),
+                        width: node.width() * scaleX,
+                        height: node.height() * scaleY,
+                        rotation: node.rotation(),
+                        fontSize: node.fontSize() ? node.fontSize() * scaleY : undefined,
+                    };
+                    onChange(newProps);
+                }}
+                onDragEnd={() => {
+                    onChange({
+                        x: textRef.current?.x() || 0,
+                        y: textRef.current?.y() || 0,
+                        width: textRef.current?.width() || 0,
+                        height: textRef.current?.height() || 0,
+                    });
+                }}
+            />
+
+            {isSelected && !isEditing && (
+                <Transformer
+                    ref={trRef}
+                    boundBoxFunc={(oldBox, newBox) => ({
+                        ...newBox,
+                        width: Math.max(30, newBox.width),
+                    })}
+                />
             )}
-            {isEditing && textRef.current && (
+
+            {isEditing && editorConfig && (
                 <TextEditor
-                    textNode={textRef.current}
+                    config={editorConfig}
                     onChange={handleTextChange}
-                    onClose={handleClose}
+                    onClose={() => {
+                        setIsEditing(false);
+                        setEditorConfig(null); // Очищаем конфиг при выходе
+                    }}
                 />
             )}
         </>

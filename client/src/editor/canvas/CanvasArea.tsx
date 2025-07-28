@@ -13,6 +13,7 @@ import {
 } from "react-konva";
 import { useImage } from "../../features/hooks/useImage";
 import { useEditor } from "../state/useEditor";
+import { TextElement } from "../elements/TextElement";
 
 
 export const CanvasArea = () => {
@@ -74,44 +75,56 @@ export const CanvasArea = () => {
             >
                 <Layer>
                     {elements.map((elem) => {
-                        const commonProps = {
-                            ...elem.props,
-                            onClick: () => setSelectedId(elem.id),
-                            onDragEnd: (e: any) =>
-                                updateElement(elem.id, {
-                                    x: e.target.x(),
-                                    y: e.target.y(),
-                                }),
-                            onTransformEnd: (e: any) => {
-                                const node = e.target;
-                                const scaleX = node.scaleX();
-                                const scaleY = node.scaleY();
+                        if (elem.type === 'text') {
+                            return (
+                                <TextElement
+                                    key={elem.id}
+                                    {...elem.props}
+                                    id={elem.id}
+                                    onChange={(newProps) => updateElement(elem.id, newProps)}
+                                    onSelect={() => setSelectedId(elem.id)}
+                                    isSelected={selectedId === elem.id}
+                                />
+                            );
+                        } else {
+                            const commonProps = {
+                                ...elem.props,
+                                onClick: () => setSelectedId(elem.id),
+                                onDragEnd: (e: any) =>
+                                    updateElement(elem.id, {
+                                        x: e.target.x(),
+                                        y: e.target.y(),
+                                    }),
+                                onTransformEnd: (e: any) => {
+                                    const node = e.target;
+                                    const scaleX = node.scaleX();
+                                    const scaleY = node.scaleY();
 
-                                node.scaleX(1);
-                                node.scaleY(1);
-                                const newProps = node.attrs;
-                                console.log("UPDATED:", newProps);
-                                updateElement(elem.id, {
-                                    x: newProps.x,
-                                    y: newProps.y,
-                                    width: node.width() * scaleX,
-                                    height: node.height() * scaleY,
-                                    rotation: newProps.rotation,
-                                    fontSize: newProps.fontSize ? newProps.fontSize * scaleY : undefined,
-                                });
+                                    node.scaleX(1);
+                                    node.scaleY(1);
+                                    const newProps = node.attrs;
+                                    console.log("UPDATED:", newProps);
+                                    updateElement(elem.id, {
+                                        x: newProps.x,
+                                        y: newProps.y,
+                                        width: node.width() * scaleX,
+                                        height: node.height() * scaleY,
+                                        rotation: newProps.rotation,
+                                        fontSize: newProps.fontSize ? newProps.fontSize * scaleY : undefined,
+                                    });
+                                }
+
+                            };
+                            switch (elem.type) {
+                                case "rect":
+                                    return <Rect key={elem.id} {...commonProps} />;
+                                case "image": {
+                                    const image = useImage(elem.props.src);
+                                    return <KonvaImage {...commonProps} image={image} />;
+                                }
+                                default:
+                                    return null;
                             }
-                        };
-                        switch (elem.type) {
-                            case "text":
-                                return <Text key={elem.id} {...commonProps} />;
-                            case "rect":
-                                return <Rect key={elem.id} {...commonProps} />;
-                            case "image": {
-                                const image = useImage(elem.props.src);
-                                return <KonvaImage {...commonProps} image={image} />;
-                            }
-                            default:
-                                return null;
                         }
                     })}
                     {selectedId && <Transformer ref={trRef} />}

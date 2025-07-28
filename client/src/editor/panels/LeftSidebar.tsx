@@ -1,5 +1,6 @@
 // src/components/LeftSidebar.tsx
 import { Box, IconButton, Stack, Tooltip } from "@mui/material";
+import DeleteIcon from '@mui/icons-material/Delete';
 import TextFieldsIcon from "@mui/icons-material/TextFields";
 import ImageIcon from "@mui/icons-material/Image";
 import CropSquareIcon from "@mui/icons-material/CropSquare";
@@ -12,6 +13,7 @@ const LeftSidebar = () => {
         { type: "text", icon: <TextFieldsIcon />, label: "Текст" },
         { type: "image", icon: <ImageIcon />, label: "Изображение" },
         { type: "shape", icon: <CropSquareIcon />, label: "Фигура" },
+        { type: "clear", icon: <DeleteIcon />, label: "Очистить" },
     ] as const;
 
     return (
