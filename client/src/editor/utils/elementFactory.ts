@@ -7,6 +7,8 @@ export const createElement = (type: ElemType, props: any) => {
             return createText()
         case "rect":
             return createRect()
+        case "image":
+            return createImage(props?.src)
         default:
             throw new Error(`Unknown element type: ${type}`)
     }
@@ -37,5 +39,19 @@ export const createText = (id = nanoid(), text = "Текст") => ({
         fontSize: 20,
         fill: "black",
         draggable: true,
+    },
+});
+
+export const createImage = (src: string, id = nanoid()) => ({
+    id,
+    type: "image" as const,
+    props: {
+        id,
+        x: 100,
+        y: 100,
+        width: 200,
+        height: 200,
+        draggable: true,
+        src,
     },
 });

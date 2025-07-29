@@ -5,18 +5,19 @@ import { PrismaService } from './common/services/prisma.service';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule,  { logger: new Logger() });
-    const prismaService = app.get(PrismaService);
+  const app = await NestFactory.create(AppModule, { logger: new Logger() });
+  const prismaService = app.get(PrismaService);
 
-    app.enableCors({
-    origin: 'http://localhost:3000',
+  app.enableCors({
+    origin: ['http://localhost:5173', 'http://127.0.0.1:5173'],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     allowedHeaders: 'Content-Type,Accept,Authorization,Access-Control-Allow-Origin',
     credentials: true,
+
   });
 
 
-    app.useGlobalPipes(
+  app.useGlobalPipes(
     new ValidationPipe({
       transform: true,
       disableErrorMessages: true,
@@ -31,10 +32,10 @@ async function bootstrap() {
 
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
-  
-  const port = process.env.PORT || 8000;
-    await app.listen(port);
 
-    Logger.log(`🚀 Application is running on: http://localhost:${port}/`);
-  }
+  const port = process.env.PORT || 8000;
+  await app.listen(port);
+
+  Logger.log(`🚀 Application is running on: http://localhost:${port}/`);
+}
 bootstrap();

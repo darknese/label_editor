@@ -16,6 +16,7 @@ import { useImage } from "../hooks/useImage";
 import { useEditor } from "../state/useEditor";
 import { TextElement } from "../elements/TextElement";
 import { useSnapping } from "../hooks/useSnapping";
+import { ImageElement } from "../elements/ImageElement";
 
 
 export const CanvasArea = () => {
@@ -152,10 +153,26 @@ export const CanvasArea = () => {
                             switch (elem.type) {
                                 case "rect":
                                     return <Rect key={elem.id} {...commonProps} />;
-                                case "image": {
-                                    const image = useImage(elem.props.src);
-                                    return <KonvaImage {...commonProps} image={image} />;
-                                }
+                                case "image":
+                                    {
+                                        if (!elem.props.src) {
+                                            console.warn(`ImageElement with id ${elem.id} has no src`);
+                                            return null;
+                                        }
+                                        return (
+                                            <ImageElement
+                                                key={elem.id}
+                                                id={elem.id}
+                                                src={elem.props.src}
+                                                props={elem.props}
+                                                isSelected={selectedId === elem.id}
+                                                onClick={commonProps.onClick}
+                                                onDragMove={commonProps.onDragMove}
+                                                onDragEnd={commonProps.onDragEnd}
+                                                onTransformEnd={commonProps.onTransformEnd}
+                                            />
+                                        );
+                                    }
                                 default:
                                     return null;
                             }

@@ -156,6 +156,7 @@ export const useEditor = create<EditorState>()(
                     elements: [],
                     CANVAS_SIZE: { width: 1000, height: 1000 },
                     selectedId: null,
+                    guidelines: [],
                 }),
         }),
         {

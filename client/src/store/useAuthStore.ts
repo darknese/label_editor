@@ -13,6 +13,7 @@ interface AuthState {
     user: User | null;
     setAuth: (token: string, user: User) => void;
     logout: () => void;
+    getToken: () => string | null;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -22,6 +23,9 @@ export const useAuthStore = create<AuthState>((set) => ({
         localStorage.setItem('token', token);
         localStorage.setItem('user', JSON.stringify(user));
         set({ token, user });
+    },
+    getToken: () => {
+        return localStorage.getItem('token');
     },
     logout: () => {
         localStorage.removeItem('token');
