@@ -31,7 +31,7 @@ export const CanvasArea = () => {
     const stageRef = useRef<Konva.Stage>(null);
     const trRef = useRef<Konva.Transformer>(null);
     const containerRef = useRef<HTMLDivElement>(null);
-
+    const isEditingRef = useRef<boolean>(false)
     const selectedItem = selectedId
         ? elements.find((elem) => elem.id === selectedId)
         : null;
@@ -42,6 +42,13 @@ export const CanvasArea = () => {
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
         if (e.key === "Backspace" && selectedId) {
+            const selectedElement = elements.find((elem) => elem.id === selectedId);
+            // Проверяем, является ли элемент текстовым и находится ли он в режиме редактирования
+            if (selectedElement?.type === "text" && isEditingRef.current) {
+                // Если редактируется текст, позволяем стандартному поведению Backspace
+                return;
+            }
+            // В обычном режиме удаляем элемент
             deleteSelected();
             e.preventDefault();
         }
@@ -81,7 +88,13 @@ export const CanvasArea = () => {
                                     key={elem.id}
                                     {...elem.props}
                                     id={elem.id}
-                                    onChange={(newProps) => updateElement(elem.id, newProps)}
+                                    onChange={(newProps) => {
+                                        if (newProps.isEditing !== undefined) {
+                                            isEditingRef.current = newProps.isEditing;
+                                            delete newProps.isEditing;
+                                        }
+                                        updateElement(elem.id, newProps)
+                                    }}
                                     onSelect={() => setSelectedId(elem.id)}
                                     isSelected={selectedId === elem.id}
                                 />

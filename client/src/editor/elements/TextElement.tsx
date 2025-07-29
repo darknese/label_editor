@@ -15,7 +15,7 @@ interface Props {
     fontFamily?: string;
     fill?: string;
     text?: string;
-    onChange: (newProps: Partial<EditorConfig>) => void;
+    onChange: (newProps: any) => void;
     onSelect: () => void;
     isSelected: boolean;
 }
@@ -65,19 +65,19 @@ export const TextElement = ({
 
     // Установка курсора при редактировании
     useEffect(() => {
+        const stage = textRef.current?.getStage();
         if (isEditing) {
             setTimeout(() => {
-                const stage = textRef.current?.getStage();
                 stage?.container().style.setProperty('cursor', 'text');
             });
         } else {
-            const stage = textRef.current?.getStage();
             stage?.container().style.setProperty('cursor', 'default');
         }
     }, [isEditing]);
 
     // Обработка двойного клика
     const handleDoubleClick = useCallback(() => {
+        console.log("Double click on text element:", id);
         const node = textRef.current;
         if (node) {
             // 1. Считываем все данные ДО того, как скрыть текст
@@ -98,6 +98,7 @@ export const TextElement = ({
             setEditorConfig(config);
             // 3. Включаем режим редактирования
             setIsEditing(true);
+            onChange({ isEditing: true });
         }
     }, []);
 
@@ -113,7 +114,7 @@ export const TextElement = ({
 
     // Завершение редактирования и обновление текста
     const handleTextChange = useCallback((newText: string) => {
-        onChange({ text: newText });
+        onChange({ text: newText, isEditing: false });
     }, [onChange]);
 
 
@@ -182,6 +183,9 @@ export const TextElement = ({
                     onClose={() => {
                         setIsEditing(false);
                         setEditorConfig(null); // Очищаем конфиг при выходе
+                        const stage = textRef.current?.getStage();
+                        stage?.container().style.setProperty('cursor', 'default');
+
                     }}
                 />
             )}
