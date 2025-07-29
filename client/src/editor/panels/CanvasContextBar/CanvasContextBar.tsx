@@ -6,6 +6,7 @@ import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import FormatAlignLeftIcon from "@mui/icons-material/FormatAlignLeft";
 import { FormatAlignCenter } from "@mui/icons-material";
 import { useEditor } from "../../state/useEditor";
+import PaletteIcon from "@mui/icons-material/Palette"
 
 const CanvasContextBar = () => {
     const {
@@ -16,9 +17,13 @@ const CanvasContextBar = () => {
         alignLeft,
         alignRight,
         alignCenter,
+        updateElement
     } = useEditor();
 
     if (!selectedId) return null;
+    const handleColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        updateElement(selectedId, { fill: e.target.value });
+    };
 
     return (
         <Box
@@ -37,6 +42,18 @@ const CanvasContextBar = () => {
             }}
         >
             <Stack direction="row" spacing={1} alignItems="center">
+                <Tooltip title="Цвет текста">
+                    <IconButton component="label" size="small">
+                        <PaletteIcon fontSize="small" />
+                        <input
+                            type="color"
+                            hidden
+                            id="color-picker"
+                            style={{ position: 'absolute', left: '-9999px' }}
+                            onChange={handleColorChange}
+                        />
+                    </IconButton>
+                </Tooltip>
                 <Tooltip title="Удалить">
                     <IconButton onClick={() => deleteSelected()} size="small">
                         <DeleteIcon fontSize="small" />
