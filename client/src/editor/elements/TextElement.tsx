@@ -3,6 +3,8 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { Text, Transformer } from 'react-konva';
 import Konva from 'konva';
 import { TextEditor } from './TextEditor';
+import { useSnapping } from '../hooks/useSnapping';
+import { useEditor } from '../state/useEditor';
 
 interface Props {
     id: string;
@@ -54,6 +56,7 @@ export const TextElement = ({
     const [textWidth, setTextWidth] = useState(width);
 
     const [editorConfig, setEditorConfig] = useState<EditorConfig | null>(null);
+    const { elements, CANVAS_SIZE, setGuidelines } = useEditor();
 
     // Привязка трансформера к тексту
     useEffect(() => {
@@ -138,6 +141,21 @@ export const TextElement = ({
                 }}
                 onDblClick={handleDoubleClick}
                 onDblTap={handleDoubleClick}
+                onDragMove={(e: any) => {
+                    const node = e.target;
+                    const box = {
+                        x: node.x(),
+                        y: node.y(),
+                        width: node.width() * node.scaleX(),
+                        height: node.height() * node.scaleY(),
+                        id: id,
+                    };
+
+                    const { snappedX, snappedY, guidelines } = useSnapping(box, elements, CANVAS_SIZE.width, CANVAS_SIZE.height);
+
+                    node.position({ x: snappedX, y: snappedY });
+                    setGuidelines(guidelines);
+                }}
                 onTransform={handleTransform}
                 onTransformEnd={(e: any) => {
                     const node = e.target;
