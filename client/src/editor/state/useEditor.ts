@@ -24,6 +24,8 @@ interface EditorState {
     alignBottom?: () => void;
     alignMiddle?: () => void;
     clearStore: () => void;
+    guidelines: Array<{ points: number[], orientation: 'vertical' | 'horizontal' }>;
+    setGuidelines: (lines: Array<{ points: number[], orientation: 'vertical' | 'horizontal' }>) => void;
 }
 export const useEditor = create<EditorState>()(
 
@@ -32,6 +34,8 @@ export const useEditor = create<EditorState>()(
             elements: [],
             CANVAS_SIZE: { width: 1000, height: 1000 },
             selectedId: null,
+            guidelines: [],
+            setGuidelines: (lines) => set({ guidelines: lines }),
 
             addElement: (el) =>
                 set((state) => ({

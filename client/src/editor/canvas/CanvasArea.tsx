@@ -2,7 +2,7 @@
 import { Box } from "@mui/material";
 import Konva from "konva";
 import { useEffect, useRef } from "react";
-import { useTransformerBinding } from "../../features/hooks/useTransformerBinding";
+import { useTransformerBinding } from "../hooks/useTransformerBinding";
 import {
     Stage,
     Layer,
@@ -10,10 +10,12 @@ import {
     Text,
     Transformer,
     Image as KonvaImage,
+    Line,
 } from "react-konva";
-import { useImage } from "../../features/hooks/useImage";
+import { useImage } from "../hooks/useImage";
 import { useEditor } from "../state/useEditor";
 import { TextElement } from "../elements/TextElement";
+import { useSnapping } from "../hooks/useSnapping";
 
 
 export const CanvasArea = () => {
@@ -24,6 +26,8 @@ export const CanvasArea = () => {
         updateElement,
         setSelectedId,
         deleteSelected,
+        guidelines,
+        setGuidelines,
     } = useEditor();
 
 
@@ -103,11 +107,28 @@ export const CanvasArea = () => {
                             const commonProps = {
                                 ...elem.props,
                                 onClick: () => setSelectedId(elem.id),
-                                onDragEnd: (e: any) =>
+                                onDragMove: (e: any) => {
+                                    const node = e.target;
+                                    const box = {
+                                        x: node.x(),
+                                        y: node.y(),
+                                        width: node.width() * node.scaleX(),
+                                        height: node.height() * node.scaleY(),
+                                        id: elem.id,
+                                    };
+
+                                    const { snappedX, snappedY, guidelines } = useSnapping(box, elements, CANVAS_SIZE.width, CANVAS_SIZE.height);
+
+                                    node.position({ x: snappedX, y: snappedY });
+                                    setGuidelines(guidelines);
+                                },
+                                onDragEnd: (e: any) => {
                                     updateElement(elem.id, {
                                         x: e.target.x(),
                                         y: e.target.y(),
-                                    }),
+                                    });
+                                    setGuidelines([]);
+                                },
                                 onTransformEnd: (e: any) => {
                                     const node = e.target;
                                     const scaleX = node.scaleX();
@@ -141,6 +162,17 @@ export const CanvasArea = () => {
                         }
                     })}
                     {selectedId && <Transformer ref={trRef} />}
+                </Layer>
+                <Layer listening={false}>
+                    {guidelines.map((line, i) => (
+                        <Line
+                            key={i}
+                            points={line.points}
+                            stroke="rgba(0,0,255,0.5)"
+                            strokeWidth={1}
+                            dash={[4, 4]}
+                        />
+                    ))}
                 </Layer>
             </Stage>
         </Box>
