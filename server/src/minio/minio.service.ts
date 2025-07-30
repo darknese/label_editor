@@ -108,6 +108,19 @@ export class MinioService {
   }
 
   /**
+ * Получение временной ссылки для чтения файла
+ * @param fileKey - путь/имя файла в бакете
+ * @param expires - срок действия URL в секундах (по умолчанию 1 час)
+ */
+  async getPresignedGetUrl(fileKey: string, expires = 60 * 60): Promise<string> {
+    try {
+      return await this.minioClient.presignedGetObject(this.bucket, fileKey, expires);
+    } catch (e) {
+      throw new HttpException(`Error creating presigned GET url: ${e}`, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  /**
    * Проверяем, если ли объект в s3
    * @param name
    * @return информацию или false - если файла нет

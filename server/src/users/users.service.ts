@@ -4,17 +4,25 @@ import { User } from '@prisma/client';
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   findAll() {
-    return this.prisma.user.findMany(); 
+    return this.prisma.user.findMany();
   }
 
-  findOne(email: string) {
+  findOne(userId: string) {
     return this.prisma.user.findUnique({
-      where: { email }
+      where: { id: userId }
     })
   }
 
+  findByEmail(email: string): Promise<User | null> {
+    console.log('Finding user by email:', email);
+    const user = this.prisma.user.findUnique({
+      where: { email }
+    });
+    console.log('User found:', user);
+    return user
+  }
+
 }
- 

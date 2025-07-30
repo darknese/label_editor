@@ -7,6 +7,8 @@ import { AuthModule } from './auth/auth.module';
 import { UploadModule } from '@minio/minio.module';
 import { ConfigModule } from '@nestjs/config';
 import { TemplatesModule } from 'templates/templates.module';
+import { FileService } from './file/file.service';
+import { FileModule } from './file/file.module';
 
 
 @Module({
@@ -15,9 +17,10 @@ import { TemplatesModule } from 'templates/templates.module';
     AuthModule, 
     UploadModule,  
     ConfigModule.forRoot({ isGlobal: true }),
-    TemplatesModule],
+    TemplatesModule,
+    FileModule],
 
   controllers: [AppController],
-  providers: [AppService, PrismaService]
+  providers: [AppService, PrismaService, FileService]
 })
 export class AppModule {}
