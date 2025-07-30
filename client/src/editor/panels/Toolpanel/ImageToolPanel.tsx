@@ -13,10 +13,8 @@ const ImageToolPanel = () => {
         const formData = new FormData();
         const token = useAuthStore.getState().getToken();
         formData.append("file", file);
-
-
         try {
-            const response = await fetch("http://localhost:8000/upload/file", {
+            const uploadResponse = await fetch("http://localhost:8000/files/upload", {
                 method: "POST",
                 headers: {
                     Authorization: `Bearer ${token ?? ""}`
@@ -24,13 +22,21 @@ const ImageToolPanel = () => {
                 body: formData,
             });
 
-            if (!response.ok) throw new Error("Ошибка загрузки файла");
+            if (!uploadResponse.ok) throw new Error("Ошибка загрузки файла");
+            const uploadedFile = await uploadResponse.json();
 
-            const data = await response.json();
 
+            const presignedResponse = await fetch(`http://localhost:8000/files/${uploadedFile.id}/presigned`, {
+                method: "GET",
+                headers: {
+                    Authorization: `Bearer ${token ?? ""}`
+                },
+            });
+            if (!presignedResponse.ok) throw new Error("Ошибка получения presigned url");
+            const { url: presignedUrl } = await presignedResponse.json();
             // Добавляем элемент изображения на холст
             createElement("image", {
-                src: data.url,
+                src: presignedUrl,
                 x: 100,
                 y: 100,
                 width: 200,
