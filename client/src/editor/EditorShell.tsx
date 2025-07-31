@@ -4,6 +4,7 @@ import LeftSidebar from "./panels/LeftSidebar";
 import ToolPanel from "./panels/Toolpanel/ToolPanel";
 import CanvasArea from "./canvas/CanvasArea";
 import CanvasContextBar from "./panels/CanvasContextBar/CanvasContextBar";
+import TopBar from "./panels/TopBar";
 
 const EditorShell = () => {
     return (
@@ -20,6 +21,7 @@ const EditorShell = () => {
 
             {/* Рабочая зона с холстом */}
             <Box flex={1} bgcolor="#eaeaea" overflow="auto" position="relative">
+                <TopBar />
                 <CanvasContextBar />
                 <CanvasArea />
             </Box>

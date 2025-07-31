@@ -29,6 +29,7 @@ export const CanvasArea = () => {
         deleteSelected,
         guidelines,
         setGuidelines,
+        editingId
     } = useEditor();
 
 
@@ -36,7 +37,6 @@ export const CanvasArea = () => {
     const stageRef = useRef<Konva.Stage>(null);
     const trRef = useRef<Konva.Transformer>(null);
     const containerRef = useRef<HTMLDivElement>(null);
-    const isEditingRef = useRef<boolean>(false)
     const selectedItem = selectedId
         ? elements.find((elem) => elem.id === selectedId)
         : null;
@@ -49,7 +49,7 @@ export const CanvasArea = () => {
         if (e.key === "Backspace" && selectedId) {
             const selectedElement = elements.find((elem) => elem.id === selectedId);
             // Проверяем, является ли элемент текстовым и находится ли он в режиме редактирования
-            if (selectedElement?.type === "text" && isEditingRef.current) {
+            if (selectedElement?.type === "text" && editingId) {
                 // Если редактируется текст, позволяем стандартному поведению Backspace
                 return;
             }
@@ -94,10 +94,7 @@ export const CanvasArea = () => {
                                     {...elem.props}
                                     id={elem.id}
                                     onChange={(newProps) => {
-                                        if (newProps.isEditing !== undefined) {
-                                            isEditingRef.current = newProps.isEditing;
-                                            delete newProps.isEditing;
-                                        }
+                                        console.log(newProps)
                                         updateElement(elem.id, newProps)
                                     }}
                                     onSelect={() => setSelectedId(elem.id)}

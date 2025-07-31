@@ -52,11 +52,16 @@ export const TextElement = ({
 }: Props) => {
     const textRef = useRef<Konva.Text>(null);
     const trRef = useRef<Konva.Transformer>(null);
-    const [isEditing, setIsEditing] = useState(false);
     const [textWidth, setTextWidth] = useState(width);
+    const [closeEditor, setCloseEditor] = useState(false);
+    const [textHeight, setTextHeight] = useState(height);
 
     const [editorConfig, setEditorConfig] = useState<EditorConfig | null>(null);
     const { elements, CANVAS_SIZE, setGuidelines } = useEditor();
+    const {
+        editingId,
+        setEditingId
+    } = useEditor()
 
     // Привязка трансформера к тексту
     useEffect(() => {
@@ -69,14 +74,23 @@ export const TextElement = ({
     // Установка курсора при редактировании
     useEffect(() => {
         const stage = textRef.current?.getStage();
-        if (isEditing) {
+        if (editingId) {
             setTimeout(() => {
                 stage?.container().style.setProperty('cursor', 'text');
             });
         } else {
             stage?.container().style.setProperty('cursor', 'default');
         }
-    }, [isEditing]);
+    }, [editingId]);
+
+    // Обновление высоты текста
+    const updateTextHeight = useCallback(() => {
+        const node = textRef.current;
+        if (!node) return;
+        const newHeight = node.textArr.length * node.fontSize() * 1.2; // Примерный расчет высоты
+        setTextHeight(newHeight);
+        onChange({ height: newHeight });
+    }, [onChange]);
 
     // Обработка двойного клика
     const handleDoubleClick = useCallback(() => {
@@ -100,7 +114,9 @@ export const TextElement = ({
             // 2. Сохраняем конфиг в стейт
             setEditorConfig(config);
             // 3. Включаем режим редактирования
-            setIsEditing(true);
+            setTimeout(() => {
+                setEditingId(id);
+            }, 0);
             onChange({ isEditing: true });
         }
     }, []);
@@ -110,14 +126,29 @@ export const TextElement = ({
         const node = textRef.current;
         if (!node) return;
         const scaleX = node.scaleX();
+        const scaleY = node.scaleY();
         const newWidth = Math.max(30, node.width() * scaleX);
+        const newHeight = Math.max(fontSize * 1.2, node.height() * scaleY);
         setTextWidth(newWidth);
-        node.setAttrs({ width: newWidth, scaleX: 1 });
-    }, []);
+        setTextHeight(newHeight);
+        node.setAttrs({
+            width: newWidth,
+            height: newHeight,
+            scaleX: 1,
+            scaleY: 1,
+        });
+    }, [fontSize]);
 
     // Завершение редактирования и обновление текста
-    const handleTextChange = useCallback((newText: string) => {
-        onChange({ text: newText, isEditing: false });
+    const handleTextChange = useCallback((newText: string, newHeight?: number) => {
+        console.log('сработал handleTextChange')
+        console.log(newText)
+        setEditingId(null)
+        onChange({
+            text: newText,
+            height: newHeight || textRef.current?.height() || 0,
+        });
+        updateTextHeight();
     }, [onChange]);
 
 
@@ -134,8 +165,9 @@ export const TextElement = ({
                 fontFamily={fontFamily}
                 fill={fill}
                 rotation={rotation}
-                opacity={isEditing ? 0 : 1}
+                opacity={editingId === id ? 0 : 1}
                 draggable
+                wrap="word"
                 onClick={() => {
                     onSelect();
                 }}
@@ -150,9 +182,7 @@ export const TextElement = ({
                         height: node.height() * node.scaleY(),
                         id: id,
                     };
-
                     const { snappedX, snappedY, guidelines } = useSnapping(box, elements, CANVAS_SIZE.width, CANVAS_SIZE.height);
-
                     node.position({ x: snappedX, y: snappedY });
                     setGuidelines(guidelines);
                 }}
@@ -170,7 +200,6 @@ export const TextElement = ({
                         width: node.width() * scaleX,
                         height: node.height() * scaleY,
                         rotation: node.rotation(),
-                        fontSize: node.fontSize() ? node.fontSize() * scaleY : undefined,
                     };
                     onChange(newProps);
                 }}
@@ -184,26 +213,27 @@ export const TextElement = ({
                 }}
             />
 
-            {isSelected && !isEditing && (
+            {isSelected && !editingId && (
                 <Transformer
                     ref={trRef}
                     boundBoxFunc={(oldBox, newBox) => ({
                         ...newBox,
                         width: Math.max(30, newBox.width),
+                        height: Math.max(fontSize * 1.2, newBox.height),
                     })}
                 />
             )}
 
-            {isEditing && editorConfig && (
+            {editingId === id && editorConfig && (
                 <TextEditor
                     config={editorConfig}
                     onChange={handleTextChange}
+                    setCloseEditor={(n: boolean) => setCloseEditor(n)}
+                    closeEditor={closeEditor}
                     onClose={() => {
-                        setIsEditing(false);
-                        setEditorConfig(null); // Очищаем конфиг при выходе
+                        setEditorConfig(null);
                         const stage = textRef.current?.getStage();
                         stage?.container().style.setProperty('cursor', 'default');
-
                     }}
                 />
             )}

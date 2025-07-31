@@ -26,6 +26,8 @@ interface EditorState {
     clearStore: () => void;
     guidelines: Array<{ points: number[], orientation: 'vertical' | 'horizontal' }>;
     setGuidelines: (lines: Array<{ points: number[], orientation: 'vertical' | 'horizontal' }>) => void;
+    editingId: string | null;
+    setEditingId: (id: string | null) => void;
 }
 export const useEditor = create<EditorState>()(
 
@@ -158,6 +160,11 @@ export const useEditor = create<EditorState>()(
                     selectedId: null,
                     guidelines: [],
                 }),
+            editingId: null,
+            setEditingId: (id) =>
+                set({
+                    editingId: id
+                })
         }),
         {
             name: "label-editor"

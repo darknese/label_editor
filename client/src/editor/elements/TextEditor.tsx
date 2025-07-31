@@ -4,22 +4,24 @@ import { useEffect, useRef } from 'react';
 import Konva from 'konva';
 import { Html } from 'react-konva-utils';
 import type { EditorConfig } from './TextElement';
+import { useEditor } from '../state/useEditor';
 
 interface Props {
     config: EditorConfig;
-    onChange: (newText: string) => void;
+    onChange: (newText: string, newHeight?: number) => void;
     onClose: () => void;
+    setCloseEditor: (n: boolean) => void;
+    closeEditor: boolean
 }
 
-export const TextEditor = ({ config, onChange, onClose }: Props) => {
+export const TextEditor = ({ config, onChange, onClose, setCloseEditor, closeEditor }: Props) => {
     const textareaRef = useRef<HTMLTextAreaElement>(null);
+    const { editingId, setEditingId } = useEditor()
 
     useEffect(() => {
         if (!textareaRef.current) return;
-
+        setCloseEditor(false)
         const textarea = textareaRef.current;
-
-
         textarea.value = config.text;
         textarea.style.position = 'absolute';
         textarea.style.top = `${config.y}px`;
@@ -51,25 +53,27 @@ export const TextEditor = ({ config, onChange, onClose }: Props) => {
         textarea.style.height = 'auto';
         textarea.style.height = `${textarea.scrollHeight + 3}px`;
 
-
-
         const handleOutsideClick = (e: MouseEvent) => {
-            if (e.target !== textarea) {
-                onChange(textarea.value);
-                onClose();
-
+            console.log(closeEditor)
+            if ((e.target !== textarea) && !closeEditor) {
+                onChange(textarea.value, textarea.scrollHeight + 3);
+                setCloseEditor(true)
+                onClose()
             }
         };
 
         const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                onChange(textarea.value);
-                onClose();
+            if (e.key === 'Enter' && !e.shiftKey && !closeEditor) {
 
+                e.preventDefault();
+                onChange(textarea.value, textarea.scrollHeight + 3);
+                setCloseEditor(true)
+                window.removeEventListener('click', handleOutsideClick);
+                onClose()
             }
             if (e.key === 'Escape') {
-                onClose();
+                setCloseEditor(true)
+                onClose()
 
             }
         };
@@ -82,7 +86,7 @@ export const TextEditor = ({ config, onChange, onClose }: Props) => {
         textarea.addEventListener('keydown', handleKeyDown);
         textarea.addEventListener('input', handleInput);
         setTimeout(() => {
-            window.addEventListener('click', handleOutsideClick);
+            window.addEventListener('click', handleOutsideClick, { once: true });
         });
 
         return () => {
