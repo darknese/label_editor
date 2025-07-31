@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { type Element, type ElemType } from '../types/types';
 import { persist } from "zustand/middleware"
 import { createElement, createRect, createText } from "../utils/elementFactory";
+import type Konva from 'konva';
 
 interface EditorState {
     CANVAS_SIZE: { width: number, height: number };
@@ -10,13 +11,13 @@ interface EditorState {
     setCanvasSize: (width: number, height: number) => void;
     addElement: (el: Element) => void;
     createElement: (type: ElemType, props?: any) => void;
-    addRect: () => void;
-    addText: () => void;
     updateElement: (id: string, props: any) => void;
     setSelectedId: (id: string | null) => void;
     moveLayer: (direction: "up" | "down") => void;
     deleteSelected: () => void;
     duplicateElement: () => void;
+    stageRef: Konva.Stage | null;
+    setStageRef: (ref: Konva.Stage | null) => void;
     alignLeft: () => void;
     alignRight: () => void;
     alignCenter: () => void;
@@ -37,6 +38,8 @@ export const useEditor = create<EditorState>()(
             CANVAS_SIZE: { width: 1000, height: 1000 },
             selectedId: null,
             guidelines: [],
+            stageRef: null,
+            setStageRef: (ref) => set({ stageRef: ref }),
             setGuidelines: (lines) => set({ guidelines: lines }),
 
             addElement: (el) =>
@@ -54,15 +57,6 @@ export const useEditor = create<EditorState>()(
                     elements: [...state.elements, createElement(type, props)],
                 })),
 
-            addRect: () =>
-                set((state) => ({
-                    elements: [...state.elements, createRect()],
-                })),
-
-            addText: () =>
-                set((state) => ({
-                    elements: [...state.elements, createText()],
-                })),
 
             deleteSelected: () => {
                 const { selectedId, elements } = get();

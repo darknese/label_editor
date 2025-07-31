@@ -29,6 +29,7 @@ export const CanvasArea = () => {
         deleteSelected,
         guidelines,
         setGuidelines,
+        setStageRef,
         editingId
     } = useEditor();
 
@@ -40,6 +41,13 @@ export const CanvasArea = () => {
     const selectedItem = selectedId
         ? elements.find((elem) => elem.id === selectedId)
         : null;
+
+    useEffect(() => {
+        setStageRef(stageRef.current);
+        return () => {
+            setStageRef(null);
+        };
+    }, [setStageRef]);
 
     useEffect(() => {
         containerRef?.current?.focus();
