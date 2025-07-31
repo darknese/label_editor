@@ -25,6 +25,7 @@ export const TextEditor = ({ config, onChange, onClose, setCloseEditor, closeEdi
         textarea.style.width = `${config.width - config.padding * 2}px`;
         textarea.style.height = `${config.height - config.padding * 2 + 5}px`;
         textarea.style.fontSize = `${config.fontSize}px`;
+        textarea.style.fontWeight = config.fontStyle;
         textarea.style.fontFamily = config.fontFamily;
         textarea.style.color = config.fill;
         textarea.style.textAlign = config.align;

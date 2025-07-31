@@ -17,6 +17,7 @@ interface Props {
     fontFamily?: string;
     fill?: string;
     text?: string;
+    fontStyle?: string;
     onChange: (newProps: any) => void;
     onSelect: () => void;
     isSelected: boolean;
@@ -29,6 +30,7 @@ export interface EditorConfig {
     fontSize: number;
     fontFamily: string;
     fill: string;
+    fontStyle: string;
     text: string;
     align: string;
     rotation: number;
@@ -43,6 +45,7 @@ export const TextElement = ({
     height,
     rotation = 0,
     fontSize = 20,
+    fontStyle = 'normal',
     fontFamily = 'Arial',
     fill = '#000',
     text = 'text',
@@ -104,6 +107,7 @@ export const TextElement = ({
                 width: node.width(),
                 height: node.height(),
                 fontSize: node.fontSize(),
+                fontStyle: node.fontStyle() || 'normal',
                 fontFamily: node.fontFamily(),
                 fill: node.fill() as string,
                 text: node.text(),
@@ -163,6 +167,7 @@ export const TextElement = ({
                 height={height}
                 fontSize={fontSize}
                 fontFamily={fontFamily}
+                fontStyle={fontStyle}
                 fill={fill}
                 rotation={rotation}
                 opacity={editingId === id ? 0 : 1}
@@ -210,6 +215,7 @@ export const TextElement = ({
                         width: textRef.current?.width() || 0,
                         height: textRef.current?.height() || 0,
                     });
+                    setGuidelines([]);
                 }}
             />
 

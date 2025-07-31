@@ -10,7 +10,7 @@ const ToolPanel = () => {
     const { clearStore } = useEditor();
 
     return (
-        <Box p={2}>
+        <Box p={2} color='black'>
             <Typography variant="subtitle1" gutterBottom>
                 Инструмент: {activeTool || "Не выбран"}
             </Typography>

@@ -4,7 +4,7 @@ import type { ElemType } from "../types/types";
 export const createElement = (type: ElemType, props: any) => {
     switch (type) {
         case "text":
-            return createText()
+            return createText(nanoid(), props?.text, props);
         case "rect":
             return createRect()
         case "image":
@@ -28,7 +28,7 @@ export const createRect = (id = nanoid()) => ({
     },
 });
 
-export const createText = (id = nanoid(), text = "Текст") => ({
+export const createText = (id = nanoid(), text = "Текст", props: any = {}) => ({
     id,
     type: "text" as const,
     props: {
@@ -36,9 +36,12 @@ export const createText = (id = nanoid(), text = "Текст") => ({
         x: 50,
         y: 50,
         text,
-        fontSize: 20,
-        fill: "black",
+        fontSize: props.fontSize || 20,
+        fontStyle: props.fontStyle || "normal",
+        fontFamily: props.fontFamily || "Arial",
+        fill: props.fill || "black",
         draggable: true,
+        ...props,
     },
 });
 
