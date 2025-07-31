@@ -1,10 +1,8 @@
 // textEditor.tsx
 
 import { useEffect, useRef } from 'react';
-import Konva from 'konva';
 import { Html } from 'react-konva-utils';
 import type { EditorConfig } from './TextElement';
-import { useEditor } from '../state/useEditor';
 
 interface Props {
     config: EditorConfig;
@@ -16,8 +14,6 @@ interface Props {
 
 export const TextEditor = ({ config, onChange, onClose, setCloseEditor, closeEditor }: Props) => {
     const textareaRef = useRef<HTMLTextAreaElement>(null);
-    const { editingId, setEditingId } = useEditor()
-
     useEffect(() => {
         if (!textareaRef.current) return;
         setCloseEditor(false)
