@@ -3,6 +3,7 @@ import { TemplatesService } from './templates.service'
 import { FileInterceptor } from '@nestjs/platform-express';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiBearerAuth, ApiBody, ApiConsumes } from '@nestjs/swagger';
+import { JwtAuthGuard } from '@auth/jwt-auth.guard';
 
 @Controller('templates')
 export class TemplatesController {
@@ -14,9 +15,9 @@ export class TemplatesController {
   }
   @Post('upload')
   @UseInterceptors(FileInterceptor('file'))
-  @UseGuards(AuthGuard('jwt')) // если используешь JWT
-  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
   @ApiConsumes('multipart/form-data')
+  @ApiBearerAuth('access-token')
   @ApiBody({
     schema: {
       type: 'object',
