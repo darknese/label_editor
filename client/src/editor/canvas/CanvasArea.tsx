@@ -1,4 +1,3 @@
-// src/components/CanvasArea.tsx
 import { Box } from "@mui/material";
 import Konva from "konva";
 import { useEffect, useRef } from "react";
@@ -7,12 +6,9 @@ import {
     Stage,
     Layer,
     Rect,
-    Text,
     Transformer,
-    Image as KonvaImage,
     Line,
 } from "react-konva";
-import { useImage } from "../hooks/useImage";
 import { useEditor } from "../state/useEditor";
 import { TextElement } from "../elements/TextElement";
 import { useSnapping } from "../hooks/useSnapping";
@@ -38,9 +34,6 @@ export const CanvasArea = () => {
     const stageRef = useRef<Konva.Stage>(null);
     const trRef = useRef<Konva.Transformer>(null);
     const containerRef = useRef<HTMLDivElement>(null);
-    const selectedItem = selectedId
-        ? elements.find((elem) => elem.id === selectedId)
-        : null;
 
     useEffect(() => {
         setStageRef(stageRef.current);
@@ -56,12 +49,9 @@ export const CanvasArea = () => {
     const handleKeyDown = (e: React.KeyboardEvent) => {
         if (e.key === "Backspace" && selectedId) {
             const selectedElement = elements.find((elem) => elem.id === selectedId);
-            // Проверяем, является ли элемент текстовым и находится ли он в режиме редактирования
             if (selectedElement?.type === "text" && editingId) {
-                // Если редактируется текст, позволяем стандартному поведению Backspace
                 return;
             }
-            // В обычном режиме удаляем элемент
             deleteSelected();
             e.preventDefault();
         }

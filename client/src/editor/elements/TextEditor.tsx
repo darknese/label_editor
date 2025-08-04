@@ -1,7 +1,6 @@
-// textEditor.tsx
-
 import { useEffect, useRef } from 'react';
 import { Html } from 'react-konva-utils';
+import ClickAwayListener from '@mui/material/ClickAwayListener';
 import type { EditorConfig } from './TextElement';
 
 interface Props {
@@ -9,14 +8,15 @@ interface Props {
     onChange: (newText: string, newHeight?: number) => void;
     onClose: () => void;
     setCloseEditor: (n: boolean) => void;
-    closeEditor: boolean
+    closeEditor: boolean;
 }
 
 export const TextEditor = ({ config, onChange, onClose, setCloseEditor, closeEditor }: Props) => {
     const textareaRef = useRef<HTMLTextAreaElement>(null);
+
     useEffect(() => {
         if (!textareaRef.current) return;
-        setCloseEditor(false)
+        setCloseEditor(false);
         const textarea = textareaRef.current;
         textarea.value = config.text;
         textarea.style.position = 'absolute';
@@ -49,64 +49,58 @@ export const TextEditor = ({ config, onChange, onClose, setCloseEditor, closeEdi
 
         textarea.style.height = 'auto';
         textarea.style.height = `${textarea.scrollHeight + 3}px`;
+    }, [config, setCloseEditor]);
 
-        const handleOutsideClick = (e: MouseEvent) => {
-            console.log(closeEditor)
-            if ((e.target !== textarea) && !closeEditor) {
-                onChange(textarea.value, textarea.scrollHeight + 3);
-                setCloseEditor(true)
-                onClose()
-            }
-        };
-
-        const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key === 'Enter' && !e.shiftKey && !closeEditor) {
-
-                e.preventDefault();
-                onChange(textarea.value, textarea.scrollHeight + 3);
-                setCloseEditor(true)
-                window.removeEventListener('click', handleOutsideClick);
-                onClose()
-            }
-            if (e.key === 'Escape') {
-                setCloseEditor(true)
-                onClose()
-
-            }
-        };
-        function handleInput(this: HTMLTextAreaElement) {
-            this.style.height = 'auto';
-            this.style.height = `${this.scrollHeight + 3}px`;
+    const handleClickAway = () => {
+        if (!closeEditor && textareaRef.current) {
+            console.log(textareaRef)
+            onChange(textareaRef.current.value, textareaRef.current.scrollHeight + 3);
+            setCloseEditor(true);
+            onClose();
         }
+    };
 
+    const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+        const textarea = e.target;
+        textarea.style.height = 'auto';
+        textarea.style.height = `${textarea.scrollHeight + 3}px`;
+    };
 
-        textarea.addEventListener('keydown', handleKeyDown);
-        textarea.addEventListener('input', handleInput);
-        setTimeout(() => {
-            window.addEventListener('click', handleOutsideClick, { once: true });
-        });
-
-        return () => {
-            textarea.removeEventListener('keydown', handleKeyDown);
-            textarea.removeEventListener('input', handleInput);
-            window.removeEventListener('click', handleOutsideClick);
-
-        };
-    }, [config, onChange, onClose]);
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+        if (e.key === 'Enter' && !e.shiftKey && !closeEditor) {
+            e.preventDefault();
+            onChange(e.currentTarget.value, e.currentTarget.scrollHeight + 3);
+            setCloseEditor(true);
+            onClose();
+        }
+        if (e.key === 'Escape') {
+            setCloseEditor(true);
+            onClose();
+        }
+    };
 
     return (
         <Html>
-            <textarea
-                ref={textareaRef}
-                style={{
-                    position: 'absolute',
-                    minHeight: '1em',
-                    background: 'none',
-                    border: 'none',
-                    outline: 'none',
-                }}
-            />
+            <ClickAwayListener
+                onClickAway={handleClickAway}
+                mouseEvent="onMouseDown"
+                touchEvent="onTouchStart"
+            >
+                <div role="presentation">
+                    <textarea
+                        ref={textareaRef}
+                        style={{
+                            position: 'absolute',
+                            minHeight: '1em',
+                            background: 'none',
+                            border: 'none',
+                            outline: 'none',
+                        }}
+                        onInput={handleInput}
+                        onKeyDown={handleKeyDown}
+                    />
+                </div>
+            </ClickAwayListener>
         </Html>
     );
 };
-

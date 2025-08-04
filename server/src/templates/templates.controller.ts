@@ -37,8 +37,8 @@ export class TemplatesController {
   }
 
   @Get(':id')
-  get(@Param('id') id: string) {
-    return this.templatesService.getTemplate(id)
+  async get(@Param('id') id: string) {
+    return this.templatesService.getTemplateWithPresignedUrls(id)
   }
 
   @Get()
