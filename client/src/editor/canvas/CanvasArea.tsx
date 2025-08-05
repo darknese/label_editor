@@ -26,7 +26,8 @@ export const CanvasArea = () => {
         guidelines,
         setGuidelines,
         setStageRef,
-        editingId
+        editingId,
+        getElementSrc
     } = useEditor();
 
 
@@ -150,7 +151,8 @@ export const CanvasArea = () => {
                                     return <Rect key={elem.id} {...commonProps} />;
                                 case "image":
                                     {
-                                        if (!elem.props.src) {
+                                        const src = getElementSrc(elem);
+                                        if (!src) {
                                             console.warn(`ImageElement with id ${elem.id} has no src`);
                                             return null;
                                         }
@@ -158,7 +160,7 @@ export const CanvasArea = () => {
                                             <ImageElement
                                                 key={elem.id}
                                                 id={elem.id}
-                                                src={elem.props.src}
+                                                src={src}
                                                 props={elem.props}
                                                 isSelected={selectedId === elem.id}
                                                 onClick={commonProps.onClick}

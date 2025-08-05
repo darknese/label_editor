@@ -5,7 +5,7 @@ import type { ChangeEvent } from "react";
 import { useAuthStore } from "../../../store/useAuthStore";
 
 const ImageToolPanel = () => {
-    const { createElement } = useEditor();
+    const { createElement, addFileUrls } = useEditor();
 
     const handleUpload = async (e: ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -14,7 +14,7 @@ const ImageToolPanel = () => {
         const token = useAuthStore.getState().getToken();
         formData.append("file", file);
         try {
-            const uploadResponse = await fetch("http://localhost:8000/files/upload", {
+            const uploadResponse = await fetch("/files/upload", {
                 method: "POST",
                 headers: {
                     Authorization: `Bearer ${token ?? ""}`
@@ -25,8 +25,7 @@ const ImageToolPanel = () => {
             if (!uploadResponse.ok) throw new Error("Ошибка загрузки файла");
             const uploadedFile = await uploadResponse.json();
 
-
-            const presignedResponse = await fetch(`http://localhost:8000/files/${uploadedFile.id}/presigned`, {
+            const presignedResponse = await fetch(`/files/${uploadedFile.id}/presigned`, {
                 method: "GET",
                 headers: {
                     Authorization: `Bearer ${token ?? ""}`
@@ -34,14 +33,12 @@ const ImageToolPanel = () => {
             });
             if (!presignedResponse.ok) throw new Error("Ошибка получения presigned url");
             const { url: presignedUrl } = await presignedResponse.json();
-            // Добавляем элемент изображения на холст
-            createElement("image", {
-                src: presignedUrl,
-                x: 100,
-                y: 100,
-                width: 200,
-                height: 200,
-            });
+
+            // 1. Добавляем fileId в store fileUrls
+            addFileUrls({ [uploadedFile.id]: presignedUrl })
+
+            // 2. Добавляем элемент изображения с fileId
+            createElement("image", uploadedFile.id);
         } catch (error) {
             console.error("Ошибка загрузки:", error);
         }

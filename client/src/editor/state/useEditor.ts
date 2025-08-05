@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { type Element, type ElemType } from '../types/types';
+import { type Element, type ElemType, type TemplateResponse } from '../types/types';
 import { persist } from "zustand/middleware"
 import { createElement, createRect, createText } from "../utils/elementFactory";
 import type Konva from 'konva';
@@ -8,6 +8,7 @@ interface EditorState {
     CANVAS_SIZE: { width: number, height: number };
     elements: Element[];
     selectedId: string | null;
+    fileUrls: Record<string, string>; // fileId → presignedUrl
     setCanvasSize: (width: number, height: number) => void;
     addElement: (el: Element) => void;
     createElement: (type: ElemType, props?: any) => void;
@@ -29,6 +30,12 @@ interface EditorState {
     setGuidelines: (lines: Array<{ points: number[], orientation: 'vertical' | 'horizontal' }>) => void;
     editingId: string | null;
     setEditingId: (id: string | null) => void;
+    // Новые методы для работы с шаблонами
+    loadTemplate: (templateResponse: TemplateResponse) => void;
+    saveTemplate: (name: string, description?: string) => Promise<{ success: boolean; message: string; templateId?: string }>;
+    setFileUrls: (fileUrls: Record<string, string>) => void;
+    addFileUrls: (newFileUrls: Record<string, string>) => void;
+    getElementSrc: (element: Element) => string | undefined;
 }
 export const useEditor = create<EditorState>()(
 
@@ -39,6 +46,7 @@ export const useEditor = create<EditorState>()(
             selectedId: null,
             guidelines: [],
             stageRef: null,
+            fileUrls: {}, // мапа fileId → presignedUrl
             setStageRef: (ref) => set({ stageRef: ref }),
             setGuidelines: (lines) => set({ guidelines: lines }),
 
@@ -153,12 +161,104 @@ export const useEditor = create<EditorState>()(
                     CANVAS_SIZE: { width: 1000, height: 1000 },
                     selectedId: null,
                     guidelines: [],
+                    fileUrls: {},
                 }),
             editingId: null,
             setEditingId: (id) =>
                 set({
                     editingId: id
-                })
+                }),
+
+
+            // Новые методы для работы с шаблонами
+            loadTemplate: (templateResponse: TemplateResponse) => {
+                const { template, fileUrls } = templateResponse;
+                console.log('template: ', template)
+                console.log('fileUrls: ', fileUrls)
+                set({
+                    elements: template.data.elements || [],
+                    fileUrls,
+                });
+            },
+            saveTemplate: async (name: string, description?: string) => {
+                try {
+                    const { elements, CANVAS_SIZE, fileUrls } = get();
+
+                    // Получаем токен из localStorage
+                    const token = localStorage.getItem('token');
+                    if (!token) {
+                        return { success: false, message: 'Необходима авторизация' };
+                    }
+
+                    const templateData = {
+                        name,
+                        description,
+                        data: {
+                            elements,
+                            canvasSize: CANVAS_SIZE,
+                        },
+                    };
+
+                    // Создаем JSON файл для загрузки
+                    const jsonBlob = new Blob([JSON.stringify(templateData, null, 2)], {
+                        type: 'application/json',
+                    });
+
+                    const formData = new FormData();
+                    formData.append('file', jsonBlob, `${name}.json`);
+
+                    const response = await fetch('/templates/upload', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                        },
+                        body: formData,
+                    });
+
+                    if (response.ok) {
+                        const result = await response.json();
+                        return {
+                            success: true,
+                            message: 'Шаблон успешно сохранен',
+                            templateId: result.id
+                        };
+                    } else {
+                        const errorData = await response.json();
+                        return {
+                            success: false,
+                            message: errorData.message || 'Ошибка при сохранении шаблона'
+                        };
+                    }
+                } catch (error) {
+                    console.error('Ошибка при сохранении шаблона:', error);
+                    return {
+                        success: false,
+                        message: 'Ошибка сети при сохранении шаблона'
+                    };
+                }
+            },
+            setFileUrls: (fileUrls: Record<string, string>) => {
+                set({ fileUrls });
+            },
+            addFileUrls: (newFileUrls) => {
+                set((state) => ({
+                    fileUrls: {
+                        ...state.fileUrls,
+                        ...newFileUrls,
+                    },
+                }));
+            },
+            getElementSrc: (element: Element) => {
+                const { fileUrls } = get();
+
+                if (!element.props.fileId) return
+                // Если есть fileId, возвращаем presignedUrl
+                if (element.props.fileId && fileUrls[element.props.fileId]) {
+                    return fileUrls[element.props.fileId];
+                }
+                // Для обратной совместимости возвращаем src
+                return element.props.src;
+            },
         }),
         {
             name: "label-editor"

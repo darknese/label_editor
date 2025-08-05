@@ -3,7 +3,7 @@ import { PrismaService } from '../common/services/prisma.service';
 import { MinioService } from '../minio/minio.service';
 import { FileService } from '../file/file.service';
 import { Template } from './template.entity';
-import { File } from '@prisma/client';
+import { File, User } from '@prisma/client';
 
 @Injectable()
 export class TemplatesService {
@@ -17,7 +17,7 @@ export class TemplatesService {
     return this.prisma.template.create({ data });
   }
 
-  async upload(file: Express.Multer.File, userId: string) {
+  async upload(file: Express.Multer.File, user: User) {
     let jsonData: any;
 
     try {
@@ -30,9 +30,10 @@ export class TemplatesService {
 
     const template = await this.prisma.template.create({
       data: {
-        name: templateName,
-        data: jsonData,
-        userId,
+        name: jsonData.name || templateName,
+        description: jsonData.description,
+        data: jsonData.data || jsonData,
+        userId: user.id,
       },
     });
 
@@ -42,21 +43,39 @@ export class TemplatesService {
     };
   }
 
-  async getTemplate(id: string) {
+  async getTemplate(id: string, userId?: string) {
     const template = await this.prisma.template.findUnique({ where: { id } });
     if (!template) throw new NotFoundException(`Шаблон с id ${id} не найден`);
+
+    // Проверяем права доступа, если передан userId
+    if (userId && template.userId !== userId) {
+      throw new NotFoundException(`Шаблон с id ${id} не найден`);
+    }
+
     return template;
   }
 
-  async listTemplates() {
-    return this.prisma.template.findMany();
+  async listTemplates(userId: string) {
+    return this.prisma.template.findMany({
+      where: { userId: userId },
+      orderBy: { createdAt: 'desc' }
+    });
   }
 
-  async updateTemplate(id: string, data: Partial<Template>) {
-    return this.prisma.template.update({ where: { id }, data });
+  async updateTemplate(id: string, data: Partial<Template>, userId: string) {
+    // Проверяем права доступа
+    await this.getTemplate(id, userId);
+
+    return this.prisma.template.update({
+      where: { id },
+      data: { ...data, userId }
+    });
   }
 
-  async deleteTemplate(id: string) {
+  async deleteTemplate(id: string, userId: string) {
+    // Проверяем права доступа
+    await this.getTemplate(id, userId);
+
     return this.prisma.template.delete({ where: { id } });
   }
 
@@ -79,22 +98,26 @@ export class TemplatesService {
         }
       }
     };
-
     walk(obj);
+    console.log('obj: ', obj)
+    console.log('result: ', Array.from(result))
     return Array.from(result);
   }
 
   /**
    * Получает шаблон и подготавливает Map fileId → presignedUrl
    */
-  async getTemplateWithPresignedUrls(id: string) {
-    const template = await this.getTemplate(id);
+  async getTemplateWithPresignedUrls(id: string, userId: string) {
+    const template = await this.getTemplate(id, userId);
 
     const fileIds = this.extractFileIds(template.data);
-
     const files: File[] = await this.prisma.file.findMany({
-      where: { id: { in: fileIds } },
+      where: {
+        id: { in: fileIds },
+        userId,
+      },
     });
+    console.log('files: ', files)
 
     const fileUrlMap: Record<string, string> = {};
 

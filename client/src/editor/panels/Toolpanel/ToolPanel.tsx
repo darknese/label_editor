@@ -4,6 +4,7 @@ import TextToolPanel from "./TextToolPanel";
 import ImageToolPanel from "./ImageToolPanel";
 import { useTool } from "../../state/useTool";
 import { useEditor } from "../../state/useEditor";
+import TemplatesToolPanel from "./TemplatesToolPanel";
 
 const ToolPanel = () => {
     const { activeTool } = useTool();
@@ -18,6 +19,7 @@ const ToolPanel = () => {
             {activeTool === "shape" && <ShapeToolPanel />}
             {activeTool === "text" && <TextToolPanel />}
             {activeTool === "image" && <ImageToolPanel />}
+            {activeTool === "templates" && <TemplatesToolPanel />}
             {activeTool === "clear" && (
                 <Stack spacing={1}>
                     <Button size="small" variant="contained" onClick={clearStore}>
