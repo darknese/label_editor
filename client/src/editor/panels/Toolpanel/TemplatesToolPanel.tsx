@@ -21,6 +21,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import { useEditor } from '../../state/useEditor';
 import type { Template, TemplateResponse } from '../../types/types';
 import { useAuthStore } from '../../../store/useAuthStore';
+import { fetchWithAuth } from '../../../lib/fetchWithAuth';
 
 const TemplatesToolPanel = () => {
     const [templates, setTemplates] = useState<Template[]>([]);
@@ -39,7 +40,7 @@ const TemplatesToolPanel = () => {
         setLoading(true);
         setError(null);
         try {
-            const response = await fetch('/templates', {
+            const response = await fetchWithAuth('/templates', {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                 },
@@ -60,7 +61,7 @@ const TemplatesToolPanel = () => {
 
     const loadTemplateById = async (templateId: string) => {
         try {
-            const response = await fetch(`/templates/${templateId}`, {
+            const response = await fetchWithAuth(`/templates/${templateId}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                 },
@@ -79,7 +80,7 @@ const TemplatesToolPanel = () => {
 
     const deleteTemplate = async (templateId: string) => {
         try {
-            const response = await fetch(`/templates/${templateId}`, {
+            const response = await fetchWithAuth(`/templates/${templateId}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -100,7 +101,7 @@ const TemplatesToolPanel = () => {
 
     const updateTemplate = async (templateId: string, name: string, description?: string) => {
         try {
-            const response = await fetch(`/templates/${templateId}`, {
+            const response = await fetchWithAuth(`/templates/${templateId}`, {
                 method: 'PUT',
                 headers: {
                     'Authorization': `Bearer ${token}`,

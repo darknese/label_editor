@@ -11,8 +11,9 @@ import {
 } from "react-konva";
 import { useEditor } from "../state/useEditor";
 import { TextElement } from "../elements/TextElement";
-import { useSnapping } from "../hooks/useSnapping";
 import { ImageElement } from "../elements/ImageElement";
+import { DatamatrixElement } from "../elements/DatamatrixElement";
+import { useSnapping } from "../hooks/useSnapping";
 
 
 export const CanvasArea = () => {
@@ -24,10 +25,10 @@ export const CanvasArea = () => {
         setSelectedId,
         deleteSelected,
         guidelines,
-        setGuidelines,
         setStageRef,
         editingId,
-        getElementSrc
+        getElementSrc,
+        setGuidelines
     } = useEditor();
 
 
@@ -100,82 +101,135 @@ export const CanvasArea = () => {
                                     isSelected={selectedId === elem.id}
                                 />
                             );
-                        } else {
-                            const commonProps = {
-                                ...elem.props,
-                                onClick: () => setSelectedId(elem.id),
-                                onDragMove: (e: any) => {
-                                    const node = e.target;
-                                    const box = {
-                                        x: node.x(),
-                                        y: node.y(),
-                                        width: node.width() * node.scaleX(),
-                                        height: node.height() * node.scaleY(),
-                                        id: elem.id,
-                                    };
+                        } else if (elem.type === 'image') {
+                            const src = getElementSrc(elem);
+                            return (
+                                <ImageElement
+                                    key={elem.id}
+                                    id={elem.id}
+                                    src={src || ''}
+                                    props={elem.props}
+                                    isSelected={selectedId === elem.id}
+                                    onClick={() => setSelectedId(elem.id)}
+                                    onDragMove={(e) => {
+                                        const node = e.target;
+                                        const box = {
+                                            x: node.x(),
+                                            y: node.y(),
+                                            width: node.width() * node.scaleX(),
+                                            height: node.height() * node.scaleY(),
+                                            id: elem.id,
+                                        };
 
-                                    const { snappedX, snappedY, guidelines } = useSnapping(box, elements, CANVAS_SIZE.width, CANVAS_SIZE.height);
+                                        const { snappedX, snappedY, guidelines } = useSnapping(box, elements, CANVAS_SIZE.width, CANVAS_SIZE.height);
 
-                                    node.position({ x: snappedX, y: snappedY });
-                                    setGuidelines(guidelines);
-                                },
-                                onDragEnd: (e: any) => {
-                                    updateElement(elem.id, {
-                                        x: e.target.x(),
-                                        y: e.target.y(),
-                                    });
-                                    setGuidelines([]);
-                                },
-                                onTransformEnd: (e: any) => {
-                                    const node = e.target;
-                                    const scaleX = node.scaleX();
-                                    const scaleY = node.scaleY();
+                                        node.position({ x: snappedX, y: snappedY });
+                                        setGuidelines(guidelines);
+                                    }}
+                                    onDragEnd={(e) => {
+                                        updateElement(elem.id, {
+                                            x: e.target.x(),
+                                            y: e.target.y(),
+                                        });
+                                        setGuidelines([]);
+                                    }}
+                                    onTransformEnd={(e) => {
+                                        const node = e.target;
+                                        const scaleX = node.scaleX();
+                                        const scaleY = node.scaleY();
 
-                                    node.scaleX(1);
-                                    node.scaleY(1);
-                                    const newProps = node.attrs;
-                                    console.log("UPDATED:", newProps);
-                                    updateElement(elem.id, {
-                                        x: newProps.x,
-                                        y: newProps.y,
-                                        width: node.width() * scaleX,
-                                        height: node.height() * scaleY,
-                                        rotation: newProps.rotation,
-                                        fontSize: newProps.fontSize ? newProps.fontSize * scaleY : undefined,
-                                    });
-                                }
+                                        node.scaleX(1);
+                                        node.scaleY(1);
 
-                            };
-                            switch (elem.type) {
-                                case "rect":
-                                    return <Rect key={elem.id} {...commonProps} />;
-                                case "image":
-                                    {
-                                        const src = getElementSrc(elem);
-                                        if (!src) {
-                                            console.warn(`ImageElement with id ${elem.id} has no src`);
-                                            return null;
-                                        }
-                                        return (
-                                            <ImageElement
-                                                key={elem.id}
-                                                id={elem.id}
-                                                src={src}
-                                                props={elem.props}
-                                                isSelected={selectedId === elem.id}
-                                                onClick={commonProps.onClick}
-                                                onDragMove={commonProps.onDragMove}
-                                                onDragEnd={commonProps.onDragEnd}
-                                                onTransformEnd={commonProps.onTransformEnd}
-                                            />
+                                        updateElement(elem.id, {
+                                            x: node.x(),
+                                            y: node.y(),
+                                            width: Math.max(5, node.width() * scaleX),
+                                            height: Math.max(5, node.height() * scaleY),
+                                        });
+                                    }}
+                                />
+                            );
+                        } else if (elem.type === 'datamatrix') {
+                            return (
+                                <DatamatrixElement
+                                    key={elem.id}
+                                    element={elem}
+                                    isSelected={selectedId === elem.id}
+                                    onClick={() => setSelectedId(elem.id)}
+                                    onDragMove={(e) => {
+                                        const node = e.target;
+                                        const rect = node.getClientRect(); // 🔥 правильно
+
+                                        const box = {
+                                            x: rect.x,
+                                            y: rect.y,
+                                            width: rect.width,
+                                            height: rect.height,
+                                            id: elem.id,
+                                        };
+
+                                        const { snappedX, snappedY, guidelines } = useSnapping(
+                                            box,
+                                            elements,
+                                            CANVAS_SIZE.width,
+                                            CANVAS_SIZE.height
                                         );
-                                    }
-                                default:
-                                    return null;
-                            }
+
+                                        node.position({ x: snappedX, y: snappedY });
+                                        setGuidelines(guidelines);
+                                    }}
+                                    onDragEnd={(e) => {
+                                        updateElement(elem.id, {
+                                            x: e.target.x(),
+                                            y: e.target.y(),
+                                        });
+                                        setGuidelines([]);
+                                    }}
+                                />
+                            );
+                        } else if (elem.type === 'rect') {
+                            return (
+                                <Rect
+                                    key={elem.id}
+                                    {...elem.props}
+                                    draggable
+                                    onClick={() => setSelectedId(elem.id)}
+                                    onTap={() => setSelectedId(elem.id)}
+                                    onDragEnd={(e) => {
+                                        updateElement(elem.id, {
+                                            x: e.target.x(),
+                                            y: e.target.y(),
+                                        });
+                                    }}
+                                    onTransformEnd={(e) => {
+                                        const node = e.target;
+                                        const scaleX = node.scaleX();
+                                        const scaleY = node.scaleY();
+
+                                        node.scaleX(1);
+                                        node.scaleY(1);
+
+                                        updateElement(elem.id, {
+                                            x: node.x(),
+                                            y: node.y(),
+                                            width: Math.max(5, node.width() * scaleX),
+                                            height: Math.max(5, node.height() * scaleY),
+                                        });
+                                    }}
+                                />
+                            );
                         }
+                        return null;
                     })}
-                    {selectedId && <Transformer ref={trRef} />}
+                    {selectedId && (
+                        <Transformer
+                            ref={trRef}
+                            boundBoxFunc={(oldBox, newBox) => {
+                                return newBox;
+                            }}
+                        />
+                    )}
                 </Layer>
                 <Layer listening={false}>
                     {guidelines.map((line, i) => (

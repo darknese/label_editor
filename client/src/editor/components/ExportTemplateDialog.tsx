@@ -10,8 +10,11 @@ import {
     Stack,
     FormControlLabel,
     Checkbox,
+    Typography,
+    Box,
 } from '@mui/material';
 import { useEditor } from '../state/useEditor';
+import type { Element } from '../types/types';
 
 interface ExportTemplateDialogProps {
     open: boolean;
@@ -21,6 +24,7 @@ interface ExportTemplateDialogProps {
 export const ExportTemplateDialog: React.FC<ExportTemplateDialogProps> = ({ open, onClose }) => {
     const [templateName, setTemplateName] = useState('');
     const [includeImages, setIncludeImages] = useState(true);
+    const [convertToPlaceholders, setConvertToPlaceholders] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     const { elements, CANVAS_SIZE, fileUrls } = useEditor();
@@ -37,15 +41,42 @@ export const ExportTemplateDialog: React.FC<ExportTemplateDialogProps> = ({ open
         }
 
         try {
+            let exportElements: Element[] = elements;
+
+            if (convertToPlaceholders) {
+                let codeCounter = 1;
+
+                exportElements = elements.map((element): Element => {
+                    if (element.type === 'datamatrix' && !element.props.isPlaceholder) {
+                        const newProps = {
+                            ...element.props,
+                            code: `{{code${codeCounter++}}}`,
+                        };
+
+                        delete newProps.datamatrixCode;
+
+                        return {
+                            ...element,
+                            props: newProps,
+                        };
+                    }
+                    return element;
+                });
+            }
+
             const exportData = {
                 name: templateName.trim(),
                 version: '1.0',
                 createdAt: new Date().toISOString(),
                 data: {
-                    elements,
+                    elements: exportElements,
                     canvasSize: CANVAS_SIZE,
                 },
                 ...(includeImages && { fileUrls }),
+                exportOptions: {
+                    convertToPlaceholders,
+                    includeImages,
+                }
             };
 
             const dataStr = JSON.stringify(exportData, null, 2);
@@ -63,6 +94,7 @@ export const ExportTemplateDialog: React.FC<ExportTemplateDialogProps> = ({ open
             setTemplateName('');
             setError(null);
         } catch (error) {
+            console.error('Ошибка при экспорте шаблона:', error);
             setError('Ошибка при экспорте шаблона');
         }
     };
@@ -78,6 +110,11 @@ export const ExportTemplateDialog: React.FC<ExportTemplateDialogProps> = ({ open
             handleExport();
         }
     };
+
+    const datamatrixCount = elements.filter(el => el.type === 'datamatrix').length;
+    const testDatamatrixCount = elements.filter(el =>
+        el.type === 'datamatrix' && !el.props.isPlaceholder
+    ).length;
 
     return (
         <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
@@ -101,6 +138,7 @@ export const ExportTemplateDialog: React.FC<ExportTemplateDialogProps> = ({ open
                         placeholder="Введите название файла"
                         helperText="Файл будет сохранен как .json"
                     />
+
                     <FormControlLabel
                         control={
                             <Checkbox
@@ -110,6 +148,33 @@ export const ExportTemplateDialog: React.FC<ExportTemplateDialogProps> = ({ open
                         }
                         label="Включить ссылки на изображения"
                     />
+
+                    {datamatrixCount > 0 && (
+                        <Box sx={{ p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
+                            <Typography variant="subtitle2" gutterBottom>
+                                Datamatrix элементы: {datamatrixCount}
+                            </Typography>
+                            {testDatamatrixCount > 0 && (
+                                <Typography variant="body2" color="text.secondary">
+                                    Тестовых: {testDatamatrixCount}
+                                </Typography>
+                            )}
+                            <FormControlLabel
+                                control={
+                                    <Checkbox
+                                        checked={convertToPlaceholders}
+                                        onChange={(e) => setConvertToPlaceholders(e.target.checked)}
+                                    />
+                                }
+                                label="Конвертировать тестовые Datamatrix в {{codeN}}"
+                            />
+                            {convertToPlaceholders && (
+                                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                                    Каждый тестовый Datamatrix будет заменён на плейсхолдер
+                                </Typography>
+                            )}
+                        </Box>
+                    )}
                 </Stack>
             </DialogContent>
             <DialogActions>
@@ -126,4 +191,4 @@ export const ExportTemplateDialog: React.FC<ExportTemplateDialogProps> = ({ open
             </DialogActions>
         </Dialog>
     );
-}; 
+};

@@ -9,6 +9,8 @@ export const createElement = (type: ElemType, props: any) => {
             return createRect()
         case "image":
             return createImage(props)
+        case "datamatrix":
+            return createDatamatrix(props)
         default:
             throw new Error(`Unknown element type: ${type}`)
     }
@@ -59,3 +61,26 @@ export const createImage = (fileId: string, id = nanoid()) => ({
         src: ''
     },
 });
+
+export const createDatamatrix = (props: any = {}, id = nanoid()) => {
+    const isPlaceholder = props.isPlaceholder || false;
+    const datamatrixCode = props.datamatrixCode || null;
+    const placeholderText = props.placeholderText || 'Datamatrix GS1';
+
+    return {
+        id,
+        type: "datamatrix" as const,
+        props: {
+            id,
+            x: props.x || 100,
+            y: props.y || 100,
+            width: props.width || 100,
+            height: props.height || 100,
+            datamatrixCode,
+            isPlaceholder,
+            placeholderText,
+            draggable: true,
+            ...props,
+        },
+    };
+};

@@ -3,6 +3,7 @@ import { Stack, Button } from "@mui/material";
 import { useEditor } from "../../state/useEditor";
 import type { ChangeEvent } from "react";
 import { useAuthStore } from "../../../store/useAuthStore";
+import { fetchWithAuth } from "../../../lib/fetchWithAuth";
 
 const ImageToolPanel = () => {
     const { createElement, addFileUrls } = useEditor();
@@ -14,7 +15,7 @@ const ImageToolPanel = () => {
         const token = useAuthStore.getState().getToken();
         formData.append("file", file);
         try {
-            const uploadResponse = await fetch("/files/upload", {
+            const uploadResponse = await fetchWithAuth("/files/upload", {
                 method: "POST",
                 headers: {
                     Authorization: `Bearer ${token ?? ""}`
@@ -25,7 +26,7 @@ const ImageToolPanel = () => {
             if (!uploadResponse.ok) throw new Error("Ошибка загрузки файла");
             const uploadedFile = await uploadResponse.json();
 
-            const presignedResponse = await fetch(`/files/${uploadedFile.id}/presigned`, {
+            const presignedResponse = await fetchWithAuth(`/files/${uploadedFile.id}/presigned`, {
                 method: "GET",
                 headers: {
                     Authorization: `Bearer ${token ?? ""}`
