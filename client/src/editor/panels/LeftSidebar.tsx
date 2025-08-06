@@ -12,6 +12,7 @@ const LeftSidebar = () => {
     const { activeTool, setTool } = useTool();
 
     const tools = [
+        { type: "canvas", icon: <TextFieldsIcon />, label: "Холст" },
         { type: "text", icon: <TextFieldsIcon />, label: "Текст" },
         { type: "image", icon: <ImageIcon />, label: "Изображение" },
         { type: "shape", icon: <CropSquareIcon />, label: "Фигура" },

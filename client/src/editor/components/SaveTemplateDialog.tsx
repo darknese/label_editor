@@ -53,7 +53,6 @@ export const SaveTemplateDialog: React.FC<SaveTemplateDialogProps> = ({ open, on
                 setSuccess(result.message);
                 setTemplateName('');
                 setTemplateDescription('');
-                // Закрываем диалог через 2 секунды после успешного сохранения
                 setTimeout(() => {
                     onClose();
                     setSuccess(null);

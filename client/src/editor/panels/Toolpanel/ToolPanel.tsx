@@ -6,6 +6,7 @@ import DatamatrixToolPanel from "./DatamatrixToolPanel";
 import { useTool } from "../../state/useTool";
 import { useEditor } from "../../state/useEditor";
 import TemplatesToolPanel from "./TemplatesToolPanel";
+import CanvasToolPanel from "./CanvasToolPanel";
 
 const ToolPanel = () => {
     const { activeTool } = useTool();
@@ -16,7 +17,7 @@ const ToolPanel = () => {
             <Typography variant="subtitle1" gutterBottom>
                 Инструмент: {activeTool || "Не выбран"}
             </Typography>
-
+            {activeTool === "canvas" && <CanvasToolPanel />}
             {activeTool === "shape" && <ShapeToolPanel />}
             {activeTool === "text" && <TextToolPanel />}
             {activeTool === "image" && <ImageToolPanel />}

@@ -28,7 +28,8 @@ export const CanvasArea = () => {
         setStageRef,
         editingId,
         getElementSrc,
-        setGuidelines
+        setGuidelines,
+        showGrid
     } = useEditor();
 
 
@@ -60,6 +61,17 @@ export const CanvasArea = () => {
     };
 
     useTransformerBinding({ selectedId, stageRef, trRef });
+    const renderGridLines = () => {
+        const lines = [];
+        const gridSize = 20;
+        for (let i = gridSize; i < CANVAS_SIZE.width; i += gridSize) {
+            lines.push(<Line key={`v-${i}`} points={[i, 0, i, CANVAS_SIZE.height]} stroke="#eee" />);
+        }
+        for (let j = gridSize; j < CANVAS_SIZE.height; j += gridSize) {
+            lines.push(<Line key={`h-${j}`} points={[0, j, CANVAS_SIZE.width, j]} stroke="#eee" />);
+        }
+        return lines;
+    };
 
     return (
 
@@ -85,6 +97,11 @@ export const CanvasArea = () => {
                     }
                 }}
             >
+                {showGrid && (
+                    <Layer listening={false}>
+                        {renderGridLines()}
+                    </Layer>
+                )}
                 <Layer>
                     {elements.map((elem) => {
                         if (elem.type === 'text') {
@@ -230,7 +247,9 @@ export const CanvasArea = () => {
                             }}
                         />
                     )}
+
                 </Layer>
+
                 <Layer listening={false}>
                     {guidelines.map((line, i) => (
                         <Line

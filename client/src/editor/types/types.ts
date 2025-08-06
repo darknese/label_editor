@@ -25,7 +25,7 @@ export type Element = {
   };
 };
 
-export type ToolType = "text" | "image" | "shape" | "clear" | "templates" | "datamatrix" | null;
+export type ToolType = "canvas" | "text" | "image" | "shape" | "clear" | "templates" | "datamatrix" | null;
 
 // Типы для работы с шаблонами
 export type Template = {

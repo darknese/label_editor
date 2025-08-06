@@ -3,10 +3,13 @@ import { type Element, type ElemType, type TemplateResponse } from '../types/typ
 import { persist } from "zustand/middleware"
 import { createElement, createRect, createText } from "../utils/elementFactory";
 import type Konva from 'konva';
+import { fetchWithAuth } from '../../lib/fetchWithAuth';
 
 interface EditorState {
     CANVAS_SIZE: { width: number, height: number };
+    setShowGrid: (value: boolean) => void
     elements: Element[];
+    showGrid: boolean,
     selectedId: string | null;
     fileUrls: Record<string, string>; // fileId → presignedUrl
     setCanvasSize: (width: number, height: number) => void;
@@ -30,7 +33,6 @@ interface EditorState {
     setGuidelines: (lines: Array<{ points: number[], orientation: 'vertical' | 'horizontal' }>) => void;
     editingId: string | null;
     setEditingId: (id: string | null) => void;
-    // Новые методы для работы с шаблонами
     loadTemplate: (templateResponse: TemplateResponse) => void;
     saveTemplate: (name: string, description?: string) => Promise<{ success: boolean; message: string; templateId?: string }>;
     setFileUrls: (fileUrls: Record<string, string>) => void;
@@ -43,10 +45,12 @@ export const useEditor = create<EditorState>()(
         (set, get) => ({
             elements: [],
             CANVAS_SIZE: { width: 1000, height: 1000 },
+            setShowGrid: (value) => set({ showGrid: value }),
             selectedId: null,
             guidelines: [],
             stageRef: null,
-            fileUrls: {}, // мапа fileId → presignedUrl
+            fileUrls: {},
+            showGrid: false,
             setStageRef: (ref) => set({ stageRef: ref }),
             setGuidelines: (lines) => set({ guidelines: lines }),
 
@@ -170,7 +174,6 @@ export const useEditor = create<EditorState>()(
                 }),
 
 
-            // Новые методы для работы с шаблонами
             loadTemplate: (templateResponse: TemplateResponse) => {
                 const { template, fileUrls } = templateResponse;
                 console.log('template: ', template)
@@ -184,7 +187,6 @@ export const useEditor = create<EditorState>()(
                 try {
                     const { elements, CANVAS_SIZE, fileUrls } = get();
 
-                    // Получаем токен из localStorage
                     const token = localStorage.getItem('token');
                     if (!token) {
                         return { success: false, message: 'Необходима авторизация' };
@@ -199,7 +201,6 @@ export const useEditor = create<EditorState>()(
                         },
                     };
 
-                    // Создаем JSON файл для загрузки
                     const jsonBlob = new Blob([JSON.stringify(templateData, null, 2)], {
                         type: 'application/json',
                     });
@@ -207,7 +208,7 @@ export const useEditor = create<EditorState>()(
                     const formData = new FormData();
                     formData.append('file', jsonBlob, `${name}.json`);
 
-                    const response = await fetch('/templates/upload', {
+                    const response = await fetchWithAuth('/templates/upload', {
                         method: 'POST',
                         headers: {
                             'Authorization': `Bearer ${token}`,
@@ -252,11 +253,9 @@ export const useEditor = create<EditorState>()(
                 const { fileUrls } = get();
 
                 if (!element.props.fileId) return
-                // Если есть fileId, возвращаем presignedUrl
                 if (element.props.fileId && fileUrls[element.props.fileId]) {
                     return fileUrls[element.props.fileId];
                 }
-                // Для обратной совместимости возвращаем src
                 return element.props.src;
             },
         }),
