@@ -5,6 +5,7 @@ import ToolPanel from "./panels/Toolpanel/ToolPanel";
 import CanvasArea from "./canvas/CanvasArea";
 import CanvasContextBar from "./panels/CanvasContextBar/CanvasContextBar";
 import TopBar from "./panels/TopBar";
+import PropertiesPanel from "./panels/RightPropertiesPanel";
 
 const EditorShell = () => {
     return (
@@ -25,6 +26,13 @@ const EditorShell = () => {
                 <CanvasContextBar />
                 <CanvasArea />
             </Box>
+
+
+            {/* 🆕 Правая панель свойств */}
+            <Box width="300px" bgcolor="#fff" borderLeft="1px solid #ccc" overflow="auto">
+                <PropertiesPanel />
+            </Box>
+
         </Box>
     );
 };

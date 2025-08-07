@@ -179,6 +179,7 @@ export const useEditor = create<EditorState>()(
                 console.log('template: ', template)
                 console.log('fileUrls: ', fileUrls)
                 set({
+                    CANVAS_SIZE: template.data.canvasSize,
                     elements: template.data.elements || [],
                     fileUrls,
                 });

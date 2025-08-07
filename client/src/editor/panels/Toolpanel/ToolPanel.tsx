@@ -8,6 +8,7 @@ import { useEditor } from "../../state/useEditor";
 import TemplatesToolPanel from "./TemplatesToolPanel";
 import CanvasToolPanel from "./CanvasToolPanel";
 
+
 const ToolPanel = () => {
     const { activeTool } = useTool();
     const { clearStore } = useEditor();

@@ -7,12 +7,13 @@ import CropSquareIcon from "@mui/icons-material/CropSquare";
 import BackupTableIcon from '@mui/icons-material/BackupTable';
 import QrCodeIcon from '@mui/icons-material/QrCode';
 import { useTool } from "../state/useTool";
+import AspectRatioIcon from '@mui/icons-material/AspectRatio';
 
 const LeftSidebar = () => {
     const { activeTool, setTool } = useTool();
 
     const tools = [
-        { type: "canvas", icon: <TextFieldsIcon />, label: "Холст" },
+        { type: "canvas", icon: <AspectRatioIcon />, label: "Холст" },
         { type: "text", icon: <TextFieldsIcon />, label: "Текст" },
         { type: "image", icon: <ImageIcon />, label: "Изображение" },
         { type: "shape", icon: <CropSquareIcon />, label: "Фигура" },
